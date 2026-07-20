@@ -20,9 +20,9 @@ export default function InvitacionPage() {
 
   useEffect(() => {
     async function checkToken() {
-      const supabase = createClient();
-      const { data } = await supabase.from("clients").select("name, email, user_id").eq("invite_token", token).single();
-      if (!data) { setNotFound(true); return; }
+      const res = await fetch(`/api/invitacion?token=${token}`);
+      if (!res.ok) { setNotFound(true); return; }
+      const data = await res.json();
       if (data.user_id) { router.push("/portal"); return; }
       setClient({ name: data.name, email: data.email });
     }
@@ -47,7 +47,13 @@ export default function InvitacionPage() {
       return;
     }
 
-    await supabase.from("clients").update({ user_id: authData.user.id }).eq("invite_token", token);
+    // Usar API con service_role para actualizar user_id sin restricción de RLS
+    await fetch("/api/invitacion", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, userId: authData.user.id }),
+    });
+
     setDone(true);
     setLoading(false);
   }
