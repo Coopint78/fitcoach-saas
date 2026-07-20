@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Mail, Target, FileText, ClipboardList, Copy } from "lucide-react";
+import { ArrowLeft, Mail, Target, FileText, ClipboardList } from "lucide-react";
 import AssignRoutineButton from "@/components/AssignRoutineButton";
+import CopyLinkButton from "@/components/CopyLinkButton";
 
 export default async function ClienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -112,13 +113,3 @@ export default async function ClienteDetailPage({ params }: { params: Promise<{ 
   );
 }
 
-function CopyLinkButton({ link }: { link: string }) {
-  return (
-    <button
-      onClick={() => navigator.clipboard.writeText(link)}
-      className="flex items-center gap-2 text-xs text-indigo-600 hover:underline"
-    >
-      <Copy className="h-3 w-3" /> Copiar link
-    </button>
-  );
-}
