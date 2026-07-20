@@ -53,7 +53,8 @@ export async function updateSession(request: NextRequest) {
   const isPublic =
     publicPaths.includes(pathname) ||
     pathname.startsWith("/auth/") ||
-    pathname.startsWith("/invitacion/");
+    pathname.startsWith("/invitacion/") ||
+    pathname.startsWith("/api/invitacion");
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
