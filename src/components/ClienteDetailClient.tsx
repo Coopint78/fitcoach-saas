@@ -13,6 +13,7 @@ import { ArrowLeft, Mail, Target, FileText, ClipboardList, Phone, MapPin, Ruler,
 import AssignRoutineButton from "@/components/AssignRoutineButton";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import ChatWindow from "@/components/ChatWindow";
+import ProgressTracker from "@/components/ProgressTracker";
 import { createClient as createSupabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
@@ -306,6 +307,18 @@ export default function ClienteDetailClient({
           </Card>
         )}
       </div>
+
+      {/* Progress */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <span className="text-indigo-600">📈</span> Progreso de {client.name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProgressTracker clientId={client.id} />
+        </CardContent>
+      </Card>
 
       {/* Chat */}
       {client.user_id && (

@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Video, MessageCircle, ClipboardList } from "lucide-react";
+import { Dumbbell, Video, MessageCircle, ClipboardList, TrendingUp } from "lucide-react";
 import ProgressButton from "@/components/ProgressButton";
 import LogoutButton from "@/components/LogoutButton";
 import ChatWindow from "@/components/ChatWindow";
+import ProgressTracker from "@/components/ProgressTracker";
 import { useLanguage } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ type Props = {
 export default function PortalView({ clientName, clientId, trainerId, trainerName, clientGoal, assignments, completedExerciseIds }: Props) {
   const { t } = useLanguage();
   const completedSet = new Set(completedExerciseIds);
-  const [tab, setTab] = useState<"routines" | "chat">("routines");
+  const [tab, setTab] = useState<"routines" | "chat" | "progress">("routines");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,6 +65,14 @@ export default function PortalView({ clientName, clientId, trainerId, trainerNam
           >
             <MessageCircle className="h-4 w-4" /> Chat
           </Button>
+          <Button
+            variant={tab === "progress" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTab("progress")}
+            className={cn("gap-1.5 rounded-xl", tab === "progress" && "bg-indigo-600 hover:bg-indigo-700")}
+          >
+            <TrendingUp className="h-4 w-4" /> Progreso
+          </Button>
         </div>
 
         {clientGoal && tab === "routines" && (
@@ -72,6 +81,8 @@ export default function PortalView({ clientName, clientId, trainerId, trainerNam
 
         {tab === "chat" ? (
           <ChatWindow trainerId={trainerId} clientId={clientId} myRole="client" clientName={trainerName} />
+        ) : tab === "progress" ? (
+          <ProgressTracker clientId={clientId} />
         ) : assignments.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
             <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
