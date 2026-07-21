@@ -9,7 +9,7 @@ export default async function PortalPage() {
 
   const { data: client } = await supabase
     .from("clients")
-    .select("*, trainer:trainers(name, brand_color)")
+    .select("*, trainer:trainers(id, name, brand_color)")
     .eq("user_id", user.id)
     .single();
 
@@ -27,12 +27,14 @@ export default async function PortalPage() {
     .gte("logged_at", new Date(Date.now() - 7 * 86400000).toISOString());
 
   const completedIds = (logs ?? []).filter(l => l.completed).map(l => l.exercise_id);
-  const trainerName = (client.trainer as { name: string } | null)?.name ?? "";
+  const trainer = client.trainer as { id: string; name: string } | null;
 
   return (
     <PortalView
       clientName={client.name}
-      trainerName={trainerName}
+      clientId={client.id}
+      trainerId={trainer?.id ?? ""}
+      trainerName={trainer?.name ?? ""}
       clientGoal={client.goal ?? null}
       assignments={(assignments ?? []) as any}
       completedExerciseIds={completedIds}

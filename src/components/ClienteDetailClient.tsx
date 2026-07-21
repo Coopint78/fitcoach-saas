@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Mail, Target, FileText, ClipboardList, Phone, MapPin, Ruler, Weight, Calendar, Pencil, X, Check } from "lucide-react";
 import AssignRoutineButton from "@/components/AssignRoutineButton";
 import CopyLinkButton from "@/components/CopyLinkButton";
+import ChatWindow from "@/components/ChatWindow";
 import { createClient as createSupabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
@@ -71,11 +72,13 @@ function initFormFromClient(client: Client, lang: string) {
 
 export default function ClienteDetailClient({
   client: initialClient,
+  trainerId,
   routines,
   assignments,
   inviteLink,
 }: {
   client: Client;
+  trainerId: string;
   routines: Routine[];
   assignments: Assignment[];
   inviteLink: string;
@@ -303,6 +306,20 @@ export default function ClienteDetailClient({
           </Card>
         )}
       </div>
+
+      {/* Chat */}
+      {client.user_id && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <span className="text-indigo-600">💬</span> Chat con {client.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 overflow-hidden rounded-b-2xl">
+            <ChatWindow trainerId={trainerId} clientId={client.id} myRole="trainer" clientName={client.name} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Routines */}
       <Card>

@@ -31,6 +31,7 @@ export default async function ClienteDetailPage({ params }: { params: Promise<{ 
   return (
     <ClienteDetailClient
       client={client}
+      trainerId={trainer.id}
       routines={routines ?? []}
       assignments={(assignments ?? []).map(a => ({ ...a, routine: Array.isArray(a.routine) ? (a.routine[0] ?? null) : a.routine })) as { id: string; routine_id: string; routine: { id: string; name: string } | null }[]}
       inviteLink={inviteLink}

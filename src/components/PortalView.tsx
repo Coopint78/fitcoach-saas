@@ -1,10 +1,14 @@
 "use client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Video } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dumbbell, Video, MessageCircle, ClipboardList } from "lucide-react";
 import ProgressButton from "@/components/ProgressButton";
 import LogoutButton from "@/components/LogoutButton";
+import ChatWindow from "@/components/ChatWindow";
 import { useLanguage } from "@/lib/i18n/context";
+import { cn } from "@/lib/utils";
 
 type Exercise = { id: string; name: string; description: string | null; video_url: string | null };
 type RoutineItem = { id: string; exercise_id: string; sets: number; reps: string; order: number; exercise: Exercise };
@@ -13,15 +17,18 @@ type Assignment = { id: string; routine: Routine };
 
 type Props = {
   clientName: string;
+  clientId: string;
+  trainerId: string;
   trainerName: string;
   clientGoal: string | null;
   assignments: Assignment[];
   completedExerciseIds: string[];
 };
 
-export default function PortalView({ clientName, trainerName, clientGoal, assignments, completedExerciseIds }: Props) {
+export default function PortalView({ clientName, clientId, trainerId, trainerName, clientGoal, assignments, completedExerciseIds }: Props) {
   const { t } = useLanguage();
   const completedSet = new Set(completedExerciseIds);
+  const [tab, setTab] = useState<"routines" | "chat">("routines");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,12 +46,33 @@ export default function PortalView({ clientName, trainerName, clientGoal, assign
       </nav>
 
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("portal", "myRoutines")}</h1>
-          {clientGoal && <p className="text-sm text-gray-600 mt-1">{t("portal", "goal").replace("{goal}", clientGoal)}</p>}
+        {/* Tab switcher */}
+        <div className="flex gap-2">
+          <Button
+            variant={tab === "routines" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTab("routines")}
+            className={cn("gap-1.5 rounded-xl", tab === "routines" && "bg-indigo-600 hover:bg-indigo-700")}
+          >
+            <ClipboardList className="h-4 w-4" /> {t("portal", "myRoutines")}
+          </Button>
+          <Button
+            variant={tab === "chat" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTab("chat")}
+            className={cn("gap-1.5 rounded-xl", tab === "chat" && "bg-indigo-600 hover:bg-indigo-700")}
+          >
+            <MessageCircle className="h-4 w-4" /> Chat
+          </Button>
         </div>
 
-        {assignments.length === 0 ? (
+        {clientGoal && tab === "routines" && (
+          <p className="text-sm text-gray-600">{t("portal", "goal").replace("{goal}", clientGoal)}</p>
+        )}
+
+        {tab === "chat" ? (
+          <ChatWindow trainerId={trainerId} clientId={clientId} myRole="client" clientName={trainerName} />
+        ) : assignments.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
             <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="font-semibold text-gray-600 mb-2">{t("portal", "noRoutines")}</h3>
