@@ -8,8 +8,7 @@ export async function POST() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  // Delete existing bad user by known UUID
-  await admin.auth.admin.deleteUser("9b8d13c1-1aa3-470e-9026-63e08c849b3b");
+  // User already deleted via SQL — skip deleteUser to avoid 500 from corrupted record
 
   // Create user properly via admin API
   const { data, error } = await admin.auth.admin.createUser({
