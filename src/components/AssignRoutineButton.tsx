@@ -19,6 +19,7 @@ export default function AssignRoutineButton({
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState("");
+  const [selectedName, setSelectedName] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -30,7 +31,7 @@ export default function AssignRoutineButton({
     const supabase = createClient();
     const { error } = await supabase.from("assignments").insert({ routine_id: selected, client_id: clientId });
     if (error) {
-      toast.error("Error al asignar rutina");
+      toast.error(`Error al asignar rutina: ${error.message}`);
     } else {
       toast.success("Rutina asignada");
       setOpen(false);
@@ -44,16 +45,18 @@ export default function AssignRoutineButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-        <Button size="sm" className="gap-1" type="button"><Plus className="h-3 w-3" /> Asignar</Button>
+        <Button size="sm" className="gap-1.5 h-8 rounded-xl font-semibold" type="button">
+          <Plus className="h-3.5 w-3.5" /> Asignar
+        </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="rounded-2xl">
         <DialogHeader>
           <DialogTitle>Asignar rutina al cliente</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <Select onValueChange={(v) => setSelected(v ?? "")} value={selected}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccioná una rutina" />
+          <Select onValueChange={(v) => { const id = v ?? ""; setSelected(id); setSelectedName(available.find(r => r.id === id)?.name ?? ""); }} value={selected}>
+            <SelectTrigger className="rounded-xl h-11">
+              <SelectValue placeholder="Seleccioná una rutina">{selectedName || undefined}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {available.map((r) => (
@@ -61,7 +64,7 @@ export default function AssignRoutineButton({
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={assign} disabled={!selected || loading} className="w-full">
+          <Button onClick={assign} disabled={!selected || loading} className="w-full h-11 rounded-xl font-semibold">
             {loading ? "Asignando..." : "Asignar rutina"}
           </Button>
         </div>

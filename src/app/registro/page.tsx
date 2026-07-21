@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell } from "lucide-react";
+import { Zap, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -42,46 +42,60 @@ export default function RegistroPage() {
     setLoading(false);
   }
 
+  const perks = [
+    "14 días gratis, sin tarjeta",
+    "Clientes y rutinas ilimitadas",
+    "Portal del cliente incluido",
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl text-indigo-600 mb-6">
-            <Dumbbell className="h-6 w-6" />
-            FitCoach
-          </Link>
+    <div className="min-h-screen bg-[#0F1117] flex flex-col items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
+      <div className="w-full max-w-sm space-y-8">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-[#A3E635] mb-2">
+            <Zap className="h-7 w-7 text-[#111827]" fill="currentColor" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">Crear cuenta</h1>
+          <div className="flex flex-col gap-1 pt-1">
+            {perks.map(p => (
+              <div key={p} className="flex items-center gap-2 justify-center">
+                <CheckCircle className="h-3.5 w-3.5 text-[#A3E635] shrink-0" />
+                <span className="text-xs text-gray-400">{p}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Crear cuenta de entrenador</CardTitle>
-            <CardDescription>14 días de prueba gratuita, sin tarjeta</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="name">Nombre completo</Label>
-                <Input id="name" value={name} onChange={e => setName(e.target.value)} required placeholder="Juan García" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Mín. 6 caracteres" />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
-              </Button>
-            </form>
-            <p className="text-center text-sm text-gray-600 mt-4">
-              ¿Ya tenés cuenta?{" "}
-              <Link href="/login" className="text-indigo-600 hover:underline font-medium">
-                Iniciar sesión
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
+
+        <div className="bg-[#1A2035] rounded-2xl border border-white/5 p-6 space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-gray-300 text-sm">Nombre completo</Label>
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} required placeholder="Juan García"
+                className="h-11 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A3E635]" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-gray-300 text-sm">Email</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com"
+                className="h-11 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A3E635]" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-gray-300 text-sm">Contraseña</Label>
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Mín. 6 caracteres"
+                className="h-11 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#A3E635]" />
+            </div>
+            <Button type="submit" className="w-full h-11 rounded-xl bg-[#A3E635] hover:bg-[#bef264] text-[#111827] font-bold" disabled={loading}>
+              {loading ? "Creando cuenta..." : "Empezar gratis →"}
+            </Button>
+          </form>
+          <p className="text-center text-sm text-gray-500">
+            ¿Ya tenés cuenta?{" "}
+            <Link href="/login" className="text-[#A3E635] hover:underline font-medium">Iniciar sesión</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

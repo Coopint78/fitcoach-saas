@@ -1,10 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Users, ClipboardList, Layers, Plus, AlertCircle } from "lucide-react";
+import { Users, ClipboardList, Layers, Plus, AlertCircle, ArrowRight } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -23,112 +22,89 @@ export default async function DashboardPage() {
   const trialEnds = trainer.trial_ends_at ? new Date(trainer.trial_ends_at) : null;
   const daysLeft = trialEnds ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86400000)) : 0;
   const isTrialing = trainer.subscription_status === "trialing";
+  const firstName = trainer.name.split(" ")[0];
+
+  const stats = [
+    { label: "Clientes", count: clientCount ?? 0, icon: Users, href: "/dashboard/clientes", cta: "Agregar cliente", ctaHref: "/dashboard/clientes/nuevo" },
+    { label: "Rutinas", count: routineCount ?? 0, icon: ClipboardList, href: "/dashboard/rutinas", cta: "Nueva rutina", ctaHref: "/dashboard/rutinas/nueva" },
+    { label: "Ejercicios", count: exerciseCount ?? 0, icon: Layers, href: "/dashboard/ejercicios", cta: "Nuevo ejercicio", ctaHref: "/dashboard/ejercicios" },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Hola, {trainer.name.split(" ")[0]} 👋</h1>
-          <p className="text-gray-600 text-sm mt-1">Aquí está el resumen de tu negocio</p>
-        </div>
+    <div className="space-y-8">
+      <div>
+        <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest mb-1">Dashboard</p>
+        <h1 className="text-3xl font-bold">Hola, {firstName} 👋</h1>
       </div>
 
       {isTrialing && daysLeft <= 7 && (
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-amber-800">
-              Tu período de prueba termina en {daysLeft} días
-            </p>
-            <p className="text-xs text-amber-700">Suscribite para no perder el acceso</p>
+        <div className="flex items-center gap-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
+          <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Prueba gratuita: {daysLeft} días restantes</p>
+            <p className="text-xs text-muted-foreground">Suscribite para no perder el acceso</p>
           </div>
-          <Link href="/dashboard/suscripcion">
-            <Button size="sm" className="bg-amber-600 hover:bg-amber-700">Suscribirme</Button>
+          <Link href="/dashboard/suscripcion" className="shrink-0">
+            <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-white font-semibold rounded-xl">
+              Activar plan
+            </Button>
           </Link>
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Clientes</CardTitle>
-            <Users className="h-4 w-4 text-indigo-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{clientCount ?? 0}</div>
-            <Link href="/dashboard/clientes/nuevo">
-              <Button variant="link" className="px-0 text-xs text-indigo-600 h-auto mt-1">+ Agregar cliente</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Rutinas</CardTitle>
-            <ClipboardList className="h-4 w-4 text-indigo-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{routineCount ?? 0}</div>
-            <Link href="/dashboard/rutinas/nueva">
-              <Button variant="link" className="px-0 text-xs text-indigo-600 h-auto mt-1">+ Nueva rutina</Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Ejercicios</CardTitle>
-            <Layers className="h-4 w-4 text-indigo-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{exerciseCount ?? 0}</div>
-            <Link href="/dashboard/ejercicios">
-              <Button variant="link" className="px-0 text-xs text-indigo-600 h-auto mt-1">Administrar</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {stats.map((s) => (
+          <Link key={s.label} href={s.href}>
+            <Card className="rounded-2xl border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer group">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <s.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                </div>
+                <p className="text-4xl font-bold mb-1">{s.count}</p>
+                <p className="text-sm text-muted-foreground">{s.label}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex items-center justify-between flex-row">
-            <CardTitle className="text-base">Accesos rápidos</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/dashboard/clientes/nuevo" className="block">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Plus className="h-4 w-4" /> Agregar cliente
+      <div>
+        <h2 className="text-lg font-bold mb-4">Acciones rápidas</h2>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {stats.map((s) => (
+            <Link key={s.ctaHref} href={s.ctaHref}>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-12 rounded-xl border-border hover:border-primary hover:bg-primary/5 font-medium"
+              >
+                <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                  <Plus className="h-3.5 w-3.5 text-primary" />
+                </div>
+                {s.cta}
               </Button>
             </Link>
-            <Link href="/dashboard/rutinas/nueva" className="block">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Plus className="h-4 w-4" /> Crear rutina
-              </Button>
-            </Link>
-            <Link href="/dashboard/ejercicios" className="block">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Plus className="h-4 w-4" /> Agregar ejercicio
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Estado de suscripción</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Plan actual</span>
-              <Badge variant={isTrialing ? "secondary" : "default"}>
-                {isTrialing ? `Prueba (${daysLeft}d)` : "Pro activo"}
-              </Badge>
-            </div>
-            {isTrialing && (
-              <Link href="/dashboard/suscripcion">
-                <Button className="w-full mt-2">Activar suscripción — $29/mes</Button>
-              </Link>
-            )}
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </div>
+
+      {isTrialing && (
+        <Card className="rounded-2xl border-border">
+          <CardContent className="p-6 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Plan de prueba activo</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {daysLeft > 0 ? `${daysLeft} días hasta que expire` : "Expiró hoy"}
+              </p>
+            </div>
+            <Link href="/dashboard/suscripcion" className="shrink-0">
+              <Button className="rounded-xl font-semibold">Ver planes → $29/mes</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

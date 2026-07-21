@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, CreditCard } from "lucide-react";
+import { CheckCircle, CreditCard, Zap } from "lucide-react";
 import StripeButtons from "@/components/StripeButtons";
 
 export default async function SuscripcionPage() {
@@ -18,40 +18,58 @@ export default async function SuscripcionPage() {
   const trialEnds = trainer.trial_ends_at ? new Date(trainer.trial_ends_at) : null;
   const daysLeft = trialEnds ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86400000)) : 0;
 
+  const features = ["Clientes ilimitados", "Rutinas y ejercicios ilimitadas", "Portal del cliente", "Seguimiento de progreso"];
+
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Suscripción</h1>
-        <p className="text-gray-600 text-sm mt-1">Gestioná tu plan y método de pago</p>
+        <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mb-1">Cuenta</p>
+        <h1 className="text-2xl font-bold">Suscripción</h1>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="rounded-2xl border-border">
+        <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-indigo-600" /> Plan actual</CardTitle>
-            <Badge variant={isActive ? "default" : "secondary"}>
-              {isActive ? "Activo" : isTrialing ? `Prueba — ${daysLeft}d restantes` : "Inactivo"}
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">Plan actual</p>
+                <p className="text-xs text-muted-foreground">FitCoach Pro</p>
+              </div>
+            </div>
+            <Badge className={isActive ? "bg-primary/15 text-primary border-primary/20 font-semibold" : "bg-muted text-muted-foreground font-semibold"}>
+              {isActive ? "Activo" : isTrialing ? `Prueba — ${daysLeft}d` : "Inactivo"}
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+
           {(isActive || isTrialing) && (
-            <div className="space-y-2">
-              {["Clientes ilimitados", "Rutinas y ejercicios ilimitados", "Portal del cliente", "Seguimiento de progreso"].map(f => (
-                <div key={f} className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500" /> {f}
+            <div className="space-y-2.5 pt-2 border-t border-border">
+              {features.map(f => (
+                <div key={f} className="flex items-center gap-2.5 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <CheckCircle className="h-3 w-3 text-primary" />
+                  </div>
+                  {f}
                 </div>
               ))}
             </div>
           )}
 
           <div className="pt-2">
-            <StripeButtons
-              trainerId={trainer.id}
-              isActive={isActive}
-              hasStripeCustomer={!!trainer.stripe_customer_id}
-            />
+            <StripeButtons trainerId={trainer.id} isActive={isActive} hasStripeCustomer={!!trainer.stripe_customer_id} />
           </div>
+
+          {isTrialing && (
+            <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 flex items-start gap-3">
+              <Zap className="h-4 w-4 text-primary mt-0.5 shrink-0" fill="currentColor" />
+              <div>
+                <p className="text-sm font-semibold">Quedan {daysLeft} días de prueba</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Activá tu plan para seguir usando FitCoach sin interrupciones</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
