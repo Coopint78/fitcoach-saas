@@ -22,9 +22,13 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      toast.error(error.message || error.name || JSON.stringify(error) || "Error desconocido");
+      const msg = `[${error.status ?? "?"}] ${error.message || error.name || "sin mensaje"}`;
+      toast.error(msg);
+      console.error("Login error:", error);
     } else {
-      router.push("/dashboard");
+      const { data: { user } } = await supabase.auth.getUser();
+      const role = user?.user_metadata?.role;
+      router.push(role === "client" ? "/portal" : "/dashboard");
       router.refresh();
     }
     setLoading(false);
