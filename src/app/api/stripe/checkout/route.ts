@@ -26,6 +26,10 @@ export async function POST() {
     subscription_data: {
       trial_period_days: 14,
       metadata: { trainer_id: trainer.id },
+      description: "FitCoach Pro - Plataforma para entrenadores personales",
+    },
+    payment_intent_data: {
+      statement_descriptor_suffix: "FITCOACH PRO",
     },
   });
 
