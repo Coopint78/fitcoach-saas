@@ -22,7 +22,7 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      toast.error(error.message);
+      toast.error(error.message || error.name || JSON.stringify(error) || "Error desconocido");
     } else {
       router.push("/dashboard");
       router.refresh();
