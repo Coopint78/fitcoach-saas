@@ -9,6 +9,7 @@ export const translations = {
       exercises: "Ejercicios",
       subscription: "Suscripción",
       payments: "Cobros",
+      profile: "Perfil",
       logout: "Cerrar sesión",
     },
     auth: {
@@ -355,6 +356,7 @@ export const translations = {
       exercises: "Exercises",
       subscription: "Subscription",
       payments: "Payments",
+      profile: "Profile",
       logout: "Log out",
     },
     auth: {
