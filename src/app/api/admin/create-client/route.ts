@@ -23,7 +23,7 @@ export async function POST() {
     user_metadata: { role: "client", name: "Luciana Del Yesso" },
   });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message, status: error.status, name: error.name, full: JSON.stringify(error) }, { status: 500 });
 
   // Update clients table with new user_id
   const { error: updateError } = await admin
