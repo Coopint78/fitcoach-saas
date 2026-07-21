@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 200" fill="none">
+  <!-- Empty state: no clients yet -->
+  <!-- Background circle -->
+  <circle cx="140" cy="90" r="64" fill="#A3E635" opacity="0.08"/>
+  <!-- People silhouettes -->
+  <circle cx="120" cy="72" r="18" fill="#1A2035" stroke="#A3E635" stroke-width="1.5" stroke-opacity="0.4"/>
+  <path d="M90 108c0-16.6 13.4-22 30-22s30 5.4 30 22" stroke="#A3E635" stroke-width="1.5" stroke-opacity="0.4" stroke-linecap="round" fill="none"/>
+  <circle cx="160" cy="76" r="14" fill="#1A2035" stroke="#6B7280" stroke-width="1.5" stroke-opacity="0.4"/>
+  <path d="M134 108c0-12 10-18 26-18s26 6 26 18" stroke="#6B7280" stroke-width="1.5" stroke-opacity="0.4" stroke-linecap="round" fill="none"/>
+  <!-- Plus badge -->
+  <circle cx="172" cy="60" r="12" fill="#A3E635"/>
+  <path d="M172 54v12M166 60h12" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+  <!-- Label -->
+  <text x="140" y="148" font-family="Inter, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#E5E7EB" text-anchor="middle">Sin clientes todavía</text>
+  <text x="140" y="168" font-family="Inter, -apple-system, sans-serif" font-size="12" font-weight="400" fill="#6B7280" text-anchor="middle">Agregá tu primer cliente</text>
+</svg>

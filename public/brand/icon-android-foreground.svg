@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" fill="none">
+  <!-- Android adaptive icon foreground (foreground content in 72x72 safe zone of 108x108) -->
+  <!-- Just the zap, no background — bg is separate -->
+  <path d="M64 18L40 58h20l-12 32L72 48H52l12-30z" fill="#111827"/>
+</svg>

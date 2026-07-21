@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 200" fill="none">
+  <!-- Empty state: no exercises (dumbbell) -->
+  <circle cx="140" cy="90" r="64" fill="#A3E635" opacity="0.08"/>
+  <!-- Dumbbell shape -->
+  <!-- Left weight -->
+  <rect x="82" y="76" width="16" height="28" rx="5" fill="#1A2035" stroke="#A3E635" stroke-width="1.5" stroke-opacity="0.5"/>
+  <!-- Bar -->
+  <rect x="98" y="86" width="84" height="8" rx="4" fill="#1A2035" stroke="#A3E635" stroke-width="1.5" stroke-opacity="0.3"/>
+  <!-- Right weight -->
+  <rect x="182" y="76" width="16" height="28" rx="5" fill="#1A2035" stroke="#A3E635" stroke-width="1.5" stroke-opacity="0.5"/>
+  <!-- Weight plates left -->
+  <rect x="74" y="72" width="10" height="36" rx="4" fill="#A3E635" opacity="0.25"/>
+  <!-- Weight plates right -->
+  <rect x="196" y="72" width="10" height="36" rx="4" fill="#A3E635" opacity="0.25"/>
+  <!-- Plus badge -->
+  <circle cx="172" cy="60" r="12" fill="#A3E635"/>
+  <path d="M172 54v12M166 60h12" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+  <!-- Label -->
+  <text x="140" y="148" font-family="Inter, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#E5E7EB" text-anchor="middle">Sin ejercicios todavía</text>
+  <text x="140" y="168" font-family="Inter, -apple-system, sans-serif" font-size="12" font-weight="400" fill="#6B7280" text-anchor="middle">Creá ejercicios para armar rutinas</text>
+</svg>
