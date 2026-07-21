@@ -94,27 +94,93 @@ export default function LandingPage() {
       <section id="precios" className="py-20 max-w-6xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">{t("landing", "pricingTitle")}</h2>
         <p className="text-center text-gray-600 mb-12">{t("landing", "pricingSubtitle")}</p>
-        <div className="max-w-sm mx-auto">
-          <Card className="border-2 border-indigo-600 shadow-lg">
+        <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-6">
+          {/* Trial */}
+          <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="text-center pb-4">
-              <Badge className="w-fit mx-auto mb-2 bg-indigo-600">{t("landing", "popular")}</Badge>
-              <CardTitle className="text-2xl">FitCoach Pro</CardTitle>
+              <CardTitle className="text-xl text-gray-700">{t("landing", "planTrial")}</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">{t("landing", "trialDesc")}</p>
               <div className="mt-4">
-                <span className="text-5xl font-bold">$29</span>
+                <span className="text-4xl font-bold text-gray-900">$0</span>
+              </div>
+              <p className="text-sm text-indigo-600 font-medium mt-1">{t("landing", "trialDays")}</p>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitClients")}</span>
+                <span className="font-medium text-gray-800">{t("landing", "limitClientsTrialVal")}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitRoutines")}</span>
+                <span className="font-medium text-gray-800">{t("landing", "limitRoutinesTrialVal")}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitExercises")}</span>
+                <span className="font-medium text-gray-800">{t("landing", "limitExercisesTrialVal")}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitPortal")}</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitInvite")}</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitSupport")}</span>
+                <span className="font-medium text-gray-800">{t("landing", "limitSupportTrialVal")}</span>
+              </div>
+              <div className="pt-3">
+                <Link href="/registro" className="block">
+                  <Button variant="outline" className="w-full" size="lg">{t("landing", "startTrialBtn")}</Button>
+                </Link>
+                <p className="text-center text-xs text-gray-400 mt-2">{t("landing", "noCreditCard")}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pro */}
+          <Card className="border-2 border-indigo-600 shadow-lg relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge className="bg-indigo-600 text-white px-4">{t("landing", "popular")}</Badge>
+            </div>
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl text-indigo-700">{t("landing", "planPro")}</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">{t("landing", "proDesc")}</p>
+              <div className="mt-4">
+                <span className="text-4xl font-bold text-gray-900">$29</span>
                 <span className="text-gray-600">{t("landing", "perMonth")}</span>
               </div>
-              <p className="text-sm text-gray-600 mt-2">{t("landing", "trialNote")}</p>
+              <p className="text-sm text-gray-500 mt-1">{t("landing", "trialNote")}</p>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {pricingFeatures.map((item) => (
-                <div key={item} className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  {item}
-                </div>
-              ))}
-              <div className="pt-4">
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitClients")}</span>
+                <span className="font-bold text-indigo-600">{t("landing", "limitClientsProVal")}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitRoutines")}</span>
+                <span className="font-bold text-indigo-600">{t("landing", "limitRoutinesProVal")}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitExercises")}</span>
+                <span className="font-bold text-indigo-600">{t("landing", "limitExercisesProVal")}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitPortal")}</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitInvite")}</span>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">{t("landing", "limitSupport")}</span>
+                <span className="font-bold text-indigo-600">{t("landing", "limitSupportProVal")}</span>
+              </div>
+              <div className="pt-3">
                 <Link href="/registro" className="block">
-                  <Button className="w-full" size="lg">{t("landing", "startTrialBtn")}</Button>
+                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">{t("landing", "startTrialBtn")}</Button>
                 </Link>
               </div>
             </CardContent>
