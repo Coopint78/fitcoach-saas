@@ -8,12 +8,8 @@ export async function POST() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  // Delete existing bad user
-  const { data: existing } = await admin.auth.admin.listUsers();
-  const luciana = existing.users.find(u => u.email === "lucianadelyesso@gmail.com");
-  if (luciana) {
-    await admin.auth.admin.deleteUser(luciana.id);
-  }
+  // Delete existing bad user by known UUID
+  await admin.auth.admin.deleteUser("9b8d13c1-1aa3-470e-9026-63e08c849b3b");
 
   // Create user properly via admin API
   const { data, error } = await admin.auth.admin.createUser({
