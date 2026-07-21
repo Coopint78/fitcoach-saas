@@ -9,9 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Video, Pencil, Layers } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/context";
 import type { Exercise } from "@/types/database";
 
 export default function EjerciciosPage() {
+  const { t } = useLanguage();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [open, setOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Exercise | null>(null);
@@ -34,7 +36,7 @@ export default function EjerciciosPage() {
   function openEdit(ex: Exercise) { setEditTarget(ex); setForm({ name: ex.name, description: ex.description ?? "", video_url: ex.video_url ?? "" }); setOpen(true); }
 
   async function handleSave() {
-    if (!form.name.trim()) { toast.error("El nombre es obligatorio"); return; }
+    if (!form.name.trim()) { toast.error(t("exercises", "nameRequired_err")); return; }
     setLoading(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,10 +45,10 @@ export default function EjerciciosPage() {
     if (!trainer) return;
     if (editTarget) {
       const { error } = await supabase.from("exercises").update({ name: form.name, description: form.description || null, video_url: form.video_url || null }).eq("id", editTarget.id);
-      if (error) toast.error("Error al actualizar"); else { toast.success("Ejercicio actualizado"); setOpen(false); load(); }
+      if (error) toast.error(t("exercises", "errorUpdate")); else { toast.success(t("exercises", "updated")); setOpen(false); load(); }
     } else {
       const { error } = await supabase.from("exercises").insert({ trainer_id: trainer.id, name: form.name, description: form.description || null, video_url: form.video_url || null });
-      if (error) toast.error("Error al crear"); else { toast.success("Ejercicio creado"); setOpen(false); load(); }
+      if (error) toast.error(t("exercises", "errorCreate")); else { toast.success(t("exercises", "created")); setOpen(false); load(); }
     }
     setLoading(false);
   }
@@ -55,30 +57,34 @@ export default function EjerciciosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mb-1">Biblioteca</p>
-          <h1 className="text-2xl font-bold">Ejercicios</h1>
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mb-1">{t("exercises", "library")}</p>
+          <h1 className="text-2xl font-bold">{t("exercises", "title")}</h1>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger>
-            <Button onClick={openNew} className="gap-2 h-10 rounded-xl font-semibold" type="button"><Plus className="h-4 w-4" /> Nuevo ejercicio</Button>
+            <Button onClick={openNew} className="gap-2 h-10 rounded-xl font-semibold" type="button">
+              <Plus className="h-4 w-4" /> {t("exercises", "newBtn")}
+            </Button>
           </DialogTrigger>
           <DialogContent className="rounded-2xl">
-            <DialogHeader><DialogTitle>{editTarget ? "Editar ejercicio" : "Nuevo ejercicio"}</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>{editTarget ? t("exercises", "editTitle") : t("exercises", "newTitle")}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1.5">
-                <Label>Nombre *</Label>
+                <Label>{t("exercises", "nameRequired")}</Label>
                 <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Press de banca" className="rounded-xl h-11" />
               </div>
               <div className="space-y-1.5">
-                <Label>Descripción</Label>
-                <Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Cómo ejecutar el ejercicio..." rows={3} className="rounded-xl" />
+                <Label>{t("exercises", "descLabel")}</Label>
+                <Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder={t("exercises", "descPlaceholder")} rows={3} className="rounded-xl" />
               </div>
               <div className="space-y-1.5">
-                <Label>URL de video</Label>
-                <Input value={form.video_url} onChange={e => setForm(p => ({ ...p, video_url: e.target.value }))} placeholder="https://youtube.com/watch?v=..." className="rounded-xl h-11" />
+                <Label>{t("exercises", "videoLabel")}</Label>
+                <Input value={form.video_url} onChange={e => setForm(p => ({ ...p, video_url: e.target.value }))} placeholder={t("exercises", "videoPlaceholder")} className="rounded-xl h-11" />
               </div>
               <Button onClick={handleSave} disabled={loading} className="w-full h-11 rounded-xl font-semibold">
-                {loading ? "Guardando..." : editTarget ? "Actualizar" : "Crear ejercicio"}
+                {loading ? t("exercises", "saving") : editTarget ? t("exercises", "updateBtn") : t("exercises", "createBtn")}
               </Button>
             </div>
           </DialogContent>
@@ -90,9 +96,9 @@ export default function EjerciciosPage() {
           <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
             <Layers className="h-7 w-7 text-muted-foreground" />
           </div>
-          <h3 className="font-semibold mb-2">Sin ejercicios todavía</h3>
-          <p className="text-sm text-muted-foreground mb-6">Creá ejercicios para poder armar rutinas</p>
-          <Button onClick={openNew} className="rounded-xl font-semibold gap-2"><Plus className="h-4 w-4" /> Crear primer ejercicio</Button>
+          <h3 className="font-semibold mb-2">{t("exercises", "noExercises")}</h3>
+          <p className="text-sm text-muted-foreground mb-6">{t("exercises", "noExercisesDesc")}</p>
+          <Button onClick={openNew} className="rounded-xl font-semibold gap-2"><Plus className="h-4 w-4" /> {t("exercises", "createFirst")}</Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -108,7 +114,7 @@ export default function EjerciciosPage() {
                 {ex.description && <p className="text-xs text-muted-foreground line-clamp-2">{ex.description}</p>}
                 {ex.video_url && (
                   <a href={ex.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium">
-                    <Video className="h-3 w-3" /> Ver video
+                    <Video className="h-3 w-3" /> {t("exercises", "watchVideo")}
                   </a>
                 )}
               </CardContent>
