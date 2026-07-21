@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST() {
-  const admin = createAdminClient();
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
   // Delete existing bad user
   const { data: existing } = await admin.auth.admin.listUsers();
