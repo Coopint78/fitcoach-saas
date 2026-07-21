@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/context";
 
 export default function NuevaRutinaPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,9 +34,9 @@ export default function NuevaRutinaPage() {
       .single();
 
     if (error) {
-      toast.error("Error al crear rutina");
+      toast.error(t("routines", "errorCreate"));
     } else {
-      toast.success("Rutina creada. Ahora agregá ejercicios.");
+      toast.success(t("routines", "routineCreated"));
       router.push(`/dashboard/rutinas/${routine.id}`);
     }
     setLoading(false);
@@ -46,22 +48,22 @@ export default function NuevaRutinaPage() {
         <Link href="/dashboard/rutinas">
           <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Nueva rutina</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("routines", "newRoutine")}</h1>
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Nombre de la rutina</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("routines", "nameLabel")}</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-1">
-              <Label>Nombre *</Label>
-              <Input value={name} onChange={e => setName(e.target.value)} required placeholder="Ej: Fuerza 3x por semana, Cardio + Core..." autoFocus />
+              <Label>{t("routines", "nameRequired")}</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} required placeholder={t("routines", "namePlaceholder")} autoFocus />
             </div>
             <div className="flex gap-3">
               <Button type="submit" disabled={loading} className="flex-1">
-                {loading ? "Creando..." : "Crear y agregar ejercicios"}
+                {loading ? t("routines", "creating") : t("routines", "createAndAdd")}
               </Button>
               <Link href="/dashboard/rutinas">
-                <Button type="button" variant="outline">Cancelar</Button>
+                <Button type="button" variant="outline">{t("routines", "cancel")}</Button>
               </Link>
             </div>
           </form>

@@ -12,10 +12,12 @@ import { ArrowLeft, Plus, GripVertical, Trash2, ClipboardList } from "lucide-rea
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Exercise, RoutineItem } from "@/types/database";
+import { useLanguage } from "@/lib/i18n/context";
 
 export default function RutinaEditorPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useLanguage();
   const [routineName, setRoutineName] = useState("");
   const [items, setItems] = useState<(RoutineItem & { exercise: Exercise })[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -50,8 +52,14 @@ export default function RutinaEditorPage() {
       routine_id: id, exercise_id: form.exercise_id,
       sets: parseInt(form.sets) || 3, reps: form.reps || "10", order: items.length,
     });
-    if (error) toast.error("Error al agregar ejercicio");
-    else { toast.success("Ejercicio agregado"); setOpen(false); setForm({ exercise_id: "", sets: "3", reps: "10" }); setExerciseName(""); load(); }
+    if (error) toast.error(t("routines", "errorAdd"));
+    else {
+      toast.success(t("routines", "exerciseAdded"));
+      setOpen(false);
+      setForm({ exercise_id: "", sets: "3", reps: "10" });
+      setExerciseName("");
+      load();
+    }
     setLoading(false);
   }
 
@@ -70,8 +78,8 @@ export default function RutinaEditorPage() {
           <Button variant="ghost" size="sm" className="rounded-xl"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest">Rutina</p>
-          <h1 className="text-2xl font-bold">{routineName || "Cargando..."}</h1>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest">{t("routines", "routineLabel")}</p>
+          <h1 className="text-2xl font-bold">{routineName || t("routines", "loading")}</h1>
         </div>
       </div>
 
@@ -79,22 +87,22 @@ export default function RutinaEditorPage() {
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-primary" />
-            Ejercicios ({items.length})
+            {t("routines", "exerciseCount").replace("{n}", String(items.length))}
           </CardTitle>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger>
               <Button size="sm" className="gap-1.5 h-8 rounded-xl font-semibold" disabled={availableExercises.length === 0} type="button">
-                <Plus className="h-3.5 w-3.5" /> Agregar
+                <Plus className="h-3.5 w-3.5" /> {t("routines", "addBtn")}
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-2xl">
-              <DialogHeader><DialogTitle>Agregar ejercicio</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("routines", "addExerciseTitle")}</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-1.5">
-                  <Label>Ejercicio</Label>
-                  <Select value={form.exercise_id} onValueChange={v => { const id = v ?? ""; setForm(p => ({ ...p, exercise_id: id })); setExerciseName(availableExercises.find(e => e.id === id)?.name ?? ""); }}>
+                  <Label>{t("routines", "exerciseLabel")}</Label>
+                  <Select value={form.exercise_id} onValueChange={v => { const eid = v ?? ""; setForm(p => ({ ...p, exercise_id: eid })); setExerciseName(availableExercises.find(e => e.id === eid)?.name ?? ""); }}>
                     <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Seleccioná un ejercicio">{exerciseName || undefined}</SelectValue>
+                      <SelectValue placeholder={t("routines", "selectExercise")}>{exerciseName || undefined}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {availableExercises.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
@@ -103,16 +111,16 @@ export default function RutinaEditorPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Series</Label>
+                    <Label>{t("routines", "setsLabel")}</Label>
                     <Input type="number" min="1" value={form.sets} onChange={e => setForm(p => ({ ...p, sets: e.target.value }))} className="rounded-xl h-11" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Reps / Duración</Label>
+                    <Label>{t("routines", "repsLabel")}</Label>
                     <Input value={form.reps} onChange={e => setForm(p => ({ ...p, reps: e.target.value }))} placeholder="10, 12-15, 30s..." className="rounded-xl h-11" />
                   </div>
                 </div>
                 <Button onClick={addItem} disabled={!form.exercise_id || loading} className="w-full h-11 rounded-xl font-semibold">
-                  {loading ? "Agregando..." : "Agregar ejercicio"}
+                  {loading ? t("routines", "adding") : t("routines", "addExerciseBtn")}
                 </Button>
               </div>
             </DialogContent>
@@ -121,7 +129,7 @@ export default function RutinaEditorPage() {
         <CardContent>
           {items.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-sm text-muted-foreground">Agregá el primer ejercicio a esta rutina</p>
+              <p className="text-sm text-muted-foreground">{t("routines", "emptyRoutine")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -131,7 +139,7 @@ export default function RutinaEditorPage() {
                   <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{idx + 1}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm">{item.exercise?.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.sets} series × {item.reps}</p>
+                    <p className="text-xs text-muted-foreground">{item.sets} {t("routines", "setsX")} {item.reps}</p>
                   </div>
                   <Button variant="ghost" size="sm"
                     className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 rounded-lg"

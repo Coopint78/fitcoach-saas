@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Dumbbell, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/context";
 
 export default function InvitacionPage() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
+  const { t } = useLanguage();
   const [client, setClient] = useState<{ name: string; email: string } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [password, setPassword] = useState("");
@@ -31,7 +33,7 @@ export default function InvitacionPage() {
 
   async function handleAccept(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 6) { toast.error("La contraseña debe tener al menos 6 caracteres"); return; }
+    if (password.length < 6) { toast.error(t("invite", "passwordTooShort")); return; }
     setLoading(true);
     const supabase = createClient();
 
@@ -42,12 +44,11 @@ export default function InvitacionPage() {
     });
 
     if (error || !authData.user) {
-      toast.error(error?.message ?? "Error al crear cuenta");
+      toast.error(error?.message ?? t("invite", "errorCreate"));
       setLoading(false);
       return;
     }
 
-    // Usar API con service_role para actualizar user_id sin restricción de RLS
     await fetch("/api/invitacion", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,8 +62,8 @@ export default function InvitacionPage() {
   if (notFound) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="max-w-sm w-full text-center p-6">
-        <p className="text-gray-600">Invitación no válida o ya usada.</p>
-        <Button className="mt-4" onClick={() => router.push("/login")}>Ir al inicio</Button>
+        <p className="text-gray-600">{t("invite", "invalid")}</p>
+        <Button className="mt-4" onClick={() => router.push("/login")}>{t("invite", "goHome")}</Button>
       </Card>
     </div>
   );
@@ -71,16 +72,16 @@ export default function InvitacionPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="max-w-sm w-full text-center p-6 space-y-4">
         <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-        <h2 className="text-xl font-bold">¡Cuenta creada!</h2>
-        <p className="text-gray-600">Ya podés ver tus rutinas.</p>
-        <Button onClick={() => router.push("/portal")} className="w-full">Ver mis rutinas</Button>
+        <h2 className="text-xl font-bold">{t("invite", "accountCreated")}</h2>
+        <p className="text-gray-600">{t("invite", "canSeeRoutines")}</p>
+        <Button onClick={() => router.push("/portal")} className="w-full">{t("invite", "viewRoutines")}</Button>
       </Card>
     </div>
   );
 
   if (!client) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-500">Cargando...</p>
+      <p className="text-gray-500">{t("invite", "loading")}</p>
     </div>
   );
 
@@ -94,21 +95,21 @@ export default function InvitacionPage() {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Hola, {client.name} 👋</CardTitle>
-            <CardDescription>Tu entrenador te invitó a FitCoach. Creá tu contraseña para acceder a tus rutinas.</CardDescription>
+            <CardTitle>{t("invite", "hello").replace("{name}", client.name)}</CardTitle>
+            <CardDescription>{t("invite", "desc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAccept} className="space-y-4">
               <div className="space-y-1">
-                <Label>Email</Label>
+                <Label>{t("invite", "emailLabel")}</Label>
                 <Input value={client.email} disabled className="bg-gray-50" />
               </div>
               <div className="space-y-1">
-                <Label>Elegí una contraseña</Label>
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Mín. 6 caracteres" />
+                <Label>{t("invite", "passwordLabel")}</Label>
+                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder={t("invite", "passwordPlaceholder")} />
               </div>
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Creando cuenta..." : "Activar mi cuenta"}
+                {loading ? t("invite", "creating") : t("invite", "activate")}
               </Button>
             </form>
           </CardContent>

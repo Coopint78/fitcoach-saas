@@ -1,15 +1,19 @@
+"use client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Zap, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/context";
 
 export default function PreciosPage() {
+  const { t } = useLanguage();
+
   const features = [
-    "Clientes ilimitados",
-    "Ejercicios y rutinas ilimitadas",
-    "Portal del cliente incluido",
-    "Seguimiento de progreso semanal",
-    "Invitación de clientes por email",
-    "Soporte prioritario",
+    t("pricing", "feat1"),
+    t("pricing", "feat2"),
+    t("pricing", "feat3"),
+    t("pricing", "feat4"),
+    t("pricing", "feat5"),
+    t("pricing", "feat6"),
   ];
 
   return (
@@ -23,9 +27,9 @@ export default function PreciosPage() {
             FitCoach
           </Link>
           <div className="flex gap-3">
-            <Link href="/login"><Button variant="ghost" className="text-gray-400 hover:text-white">Iniciar sesión</Button></Link>
+            <Link href="/login"><Button variant="ghost" className="text-gray-400 hover:text-white">{t("pricing", "signIn")}</Button></Link>
             <Link href="/registro">
-              <Button className="bg-[#A3E635] hover:bg-[#bef264] text-[#111827] font-bold rounded-xl">Empezar gratis</Button>
+              <Button className="bg-[#A3E635] hover:bg-[#bef264] text-[#111827] font-bold rounded-xl">{t("pricing", "startFree")}</Button>
             </Link>
           </div>
         </div>
@@ -33,23 +37,23 @@ export default function PreciosPage() {
 
       <div className="max-w-lg mx-auto px-6 py-20">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white mb-10 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Volver al inicio
+          <ArrowLeft className="h-4 w-4" /> {t("pricing", "backToHome")}
         </Link>
         <div className="text-center mb-12">
-          <p className="text-sm font-semibold text-[#A3E635] uppercase tracking-widest mb-3">Precio</p>
-          <h1 className="text-4xl font-bold mb-4">Simple y transparente</h1>
-          <p className="text-gray-400">Sin costos ocultos. Cancelá cuando quieras.</p>
+          <p className="text-sm font-semibold text-[#A3E635] uppercase tracking-widest mb-3">{t("pricing", "pricingLabel")}</p>
+          <h1 className="text-4xl font-bold mb-4">{t("pricing", "title")}</h1>
+          <p className="text-gray-400">{t("pricing", "subtitle")}</p>
         </div>
 
         <div className="bg-[#1A2035] rounded-3xl border border-[#A3E635]/30 p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 h-40 w-40 bg-[#A3E635]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
-            <p className="text-sm font-semibold text-[#A3E635] uppercase tracking-widest mb-2">FitCoach Pro</p>
+            <p className="text-sm font-semibold text-[#A3E635] uppercase tracking-widest mb-2">{t("pricing", "planLabel")}</p>
             <div className="flex items-end gap-2 mb-1">
               <span className="text-6xl font-bold">$29</span>
-              <span className="text-gray-400 mb-2">/mes</span>
+              <span className="text-gray-400 mb-2">{t("pricing", "perMonth")}</span>
             </div>
-            <p className="text-sm text-gray-400 mb-8">14 días de prueba gratuita — sin tarjeta al inicio</p>
+            <p className="text-sm text-gray-400 mb-8">{t("pricing", "trialNote")}</p>
             <div className="space-y-3 mb-8">
               {features.map((f) => (
                 <div key={f} className="flex items-center gap-3">
@@ -62,10 +66,10 @@ export default function PreciosPage() {
             </div>
             <Link href="/registro" className="block">
               <Button className="w-full h-12 rounded-xl bg-[#A3E635] hover:bg-[#bef264] text-[#111827] font-bold text-base">
-                Empezar prueba gratis →
+                {t("pricing", "startBtn")}
               </Button>
             </Link>
-            <p className="text-center text-xs text-gray-500 mt-3">No se requiere tarjeta de crédito</p>
+            <p className="text-center text-xs text-gray-500 mt-3">{t("pricing", "noCard")}</p>
           </div>
         </div>
       </div>
