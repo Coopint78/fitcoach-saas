@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Zap, Users, ClipboardList, Layers, LogOut, CreditCard, Menu, X } from "lucide-react";
+import { Zap, Users, ClipboardList, Layers, LogOut, CreditCard, Menu, X, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +23,7 @@ export default function DashboardNav({ trainer }: { trainer: Trainer }) {
     { href: "/dashboard/clientes", label: t("nav", "clients"), icon: Users },
     { href: "/dashboard/rutinas", label: t("nav", "routines"), icon: ClipboardList },
     { href: "/dashboard/ejercicios", label: t("nav", "exercises"), icon: Layers },
+    { href: "/dashboard/connect", label: t("nav", "payments"), icon: Banknote },
   ];
 
   async function handleLogout() {

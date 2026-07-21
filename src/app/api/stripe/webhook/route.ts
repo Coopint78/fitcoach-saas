@@ -14,32 +14,54 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const supabaseAdmin = createClient(
+  const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const sub = event.data.object as Stripe.Subscription;
-  const customerId = sub.customer as string;
-
-  switch (event.type) {
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-      await supabaseAdmin
+  if (event.type === "account.updated") {
+    // Connect: trainer completed onboarding
+    const account = event.data.object as Stripe.Account;
+    if (account.charges_enabled && account.payouts_enabled) {
+      await supabase
         .from("trainers")
-        .update({
-          stripe_subscription_id: sub.id,
-          subscription_status: sub.status,
-        })
-        .eq("stripe_customer_id", customerId);
-      break;
+        .update({ connect_enabled: true })
+        .eq("connect_account_id", account.id);
+    }
+    return NextResponse.json({ received: true });
+  }
 
-    case "customer.subscription.deleted":
-      await supabaseAdmin
+  const sub = event.data.object as Stripe.Subscription;
+  const clientId = sub.metadata?.client_id;
+
+  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+    if (clientId) {
+      // Connect: client paying trainer
+      await supabase
+        .from("clients")
+        .update({ coaching_subscription_id: sub.id, coaching_subscription_status: sub.status })
+        .eq("id", clientId);
+    } else {
+      // Platform: trainer paying FitCoach
+      await supabase
+        .from("trainers")
+        .update({ stripe_subscription_id: sub.id, subscription_status: sub.status })
+        .eq("stripe_customer_id", sub.customer as string);
+    }
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    if (clientId) {
+      await supabase
+        .from("clients")
+        .update({ coaching_subscription_status: "canceled" })
+        .eq("id", clientId);
+    } else {
+      await supabase
         .from("trainers")
         .update({ subscription_status: "canceled" })
-        .eq("stripe_customer_id", customerId);
-      break;
+        .eq("stripe_customer_id", sub.customer as string);
+    }
   }
 
   return NextResponse.json({ received: true });
