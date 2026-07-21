@@ -1,54 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
-  <!-- Background: dark carbon -->
   <rect width="1200" height="630" fill="#0F1117"/>
-
-  <!-- Decorative lime glow top-right -->
   <ellipse cx="1050" cy="120" rx="300" ry="220" fill="#A3E635" opacity="0.08"/>
-  <!-- Subtle grid lines -->
   <line x1="0" y1="210" x2="1200" y2="210" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
   <line x1="0" y1="420" x2="1200" y2="420" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
   <line x1="300" y1="0" x2="300" y2="630" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
   <line x1="600" y1="0" x2="600" y2="630" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
   <line x1="900" y1="0" x2="900" y2="630" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
-
-  <!-- App icon (large) -->
   <rect x="80" y="185" width="110" height="110" rx="24" fill="#A3E635"/>
-  <path d="M148 200L122 248h22l-12 42L162 238h-22l8-38z" fill="#111827"/>
-
-  <!-- Main headline -->
-  <text x="224" y="245" font-family="Inter, -apple-system, sans-serif" font-size="58" font-weight="800" fill="#FFFFFF" letter-spacing="-1.5">FitCoach</text>
-  <text x="224" y="310" font-family="Inter, -apple-system, sans-serif" font-size="28" font-weight="400" fill="#9CA3AF" letter-spacing="-0.3">Plataforma para entrenadores personales</text>
-
-  <!-- Feature pills -->
+  <!-- Bolt centered in 110x110 at (80,185): center=(135,240), scale=3.33 -->
+  <path d="M138 207 L105 247 H135 L132 274 L165 234 H135 Z" fill="#111827"/>
+  <text x="224" y="245" font-family="Inter,-apple-system,sans-serif" font-size="58" font-weight="800" fill="#FFFFFF" letter-spacing="-1.5">FitCoach</text>
+  <text x="224" y="310" font-family="Inter,-apple-system,sans-serif" font-size="28" font-weight="400" fill="#9CA3AF" letter-spacing="-0.3">Plataforma para entrenadores personales</text>
   <rect x="80" y="360" width="182" height="40" rx="20" fill="#1A2035" stroke="#A3E635" stroke-width="1.5" stroke-opacity="0.4"/>
-  <text x="171" y="385" font-family="Inter, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#A3E635" text-anchor="middle">Gestión de clientes</text>
-
+  <text x="171" y="385" font-family="Inter,-apple-system,sans-serif" font-size="14" font-weight="600" fill="#A3E635" text-anchor="middle">Gestión de clientes</text>
   <rect x="278" y="360" width="168" height="40" rx="20" fill="#1A2035" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
-  <text x="362" y="385" font-family="Inter, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#9CA3AF" text-anchor="middle">Creador de rutinas</text>
-
+  <text x="362" y="385" font-family="Inter,-apple-system,sans-serif" font-size="14" font-weight="600" fill="#9CA3AF" text-anchor="middle">Creador de rutinas</text>
   <rect x="462" y="360" width="172" height="40" rx="20" fill="#1A2035" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
-  <text x="548" y="385" font-family="Inter, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#9CA3AF" text-anchor="middle">Portal del cliente</text>
-
-  <!-- CTA badge -->
+  <text x="548" y="385" font-family="Inter,-apple-system,sans-serif" font-size="14" font-weight="600" fill="#9CA3AF" text-anchor="middle">Portal del cliente</text>
   <rect x="80" y="432" width="218" height="46" rx="12" fill="#A3E635"/>
-  <text x="189" y="461" font-family="Inter, -apple-system, sans-serif" font-size="17" font-weight="700" fill="#111827" text-anchor="middle">Prueba gratis 14 días</text>
-
-  <!-- Decorative mock UI card right side -->
+  <text x="189" y="461" font-family="Inter,-apple-system,sans-serif" font-size="17" font-weight="700" fill="#111827" text-anchor="middle">Prueba gratis 14 días</text>
   <rect x="760" y="100" width="360" height="430" rx="20" fill="#1A2035" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
-  <!-- Card header -->
   <rect x="776" y="116" width="200" height="8" rx="4" fill="#ffffff" opacity="0.15"/>
   <rect x="776" y="134" width="130" height="6" rx="3" fill="#ffffff" opacity="0.08"/>
-  <!-- Stat cards inside -->
   <rect x="776" y="160" width="152" height="80" rx="12" fill="#0F1117"/>
-  <rect x="776" y="163" width="40" height="40" rx="10" fill="#A3E635" opacity="0.15"/>
-  <rect x="784" y="171" width="24" height="24" rx="6" fill="#A3E635" opacity="0.4"/>
   <rect x="776" y="212" width="60" height="8" rx="4" fill="#A3E635" opacity="0.5"/>
-  <rect x="776" y="226" width="90" height="6" rx="3" fill="#ffffff" opacity="0.08"/>
   <rect x="944" y="160" width="160" height="80" rx="12" fill="#0F1117"/>
-  <rect x="944" y="163" width="40" height="40" rx="10" fill="#A3E635" opacity="0.10"/>
   <rect x="944" y="212" width="55" height="8" rx="4" fill="#ffffff" opacity="0.3"/>
-  <rect x="944" y="226" width="80" height="6" rx="3" fill="#ffffff" opacity="0.08"/>
-  <!-- Client rows -->
   <rect x="776" y="256" width="328" height="52" rx="10" fill="#0F1117"/>
   <circle cx="800" cy="282" r="14" fill="#A3E635" opacity="0.2"/>
   <rect x="824" y="272" width="100" height="7" rx="3.5" fill="#ffffff" opacity="0.3"/>
@@ -58,19 +35,14 @@
   <circle cx="800" cy="344" r="14" fill="#A3E635" opacity="0.15"/>
   <rect x="824" y="334" width="120" height="7" rx="3.5" fill="#ffffff" opacity="0.25"/>
   <rect x="824" y="348" width="80" height="5" rx="2.5" fill="#ffffff" opacity="0.1"/>
-  <rect x="1060" y="337" width="38" height="16" rx="8" fill="#ffffff" opacity="0.08"/>
-  <!-- Progress bar area -->
   <rect x="776" y="386" width="328" height="8" rx="4" fill="#0F1117"/>
   <rect x="776" y="386" width="210" height="8" rx="4" fill="#A3E635" opacity="0.6"/>
   <rect x="776" y="406" width="328" height="8" rx="4" fill="#0F1117"/>
   <rect x="776" y="406" width="140" height="8" rx="4" fill="#A3E635" opacity="0.4"/>
   <rect x="776" y="426" width="328" height="8" rx="4" fill="#0F1117"/>
   <rect x="776" y="426" width="280" height="8" rx="4" fill="#A3E635" opacity="0.5"/>
-  <!-- Bottom CTA inside card -->
   <rect x="776" y="456" width="328" height="58" rx="12" fill="#A3E635"/>
   <rect x="820" y="472" width="120" height="8" rx="4" fill="#111827" opacity="0.5"/>
   <rect x="820" y="488" width="80" height="6" rx="3" fill="#111827" opacity="0.3"/>
-
-  <!-- URL / branding bottom -->
-  <text x="80" y="590" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="500" fill="#6B7280">fitcoach.app · Empezá hoy, sin tarjeta de crédito</text>
+  <text x="80" y="590" font-family="Inter,-apple-system,sans-serif" font-size="16" font-weight="500" fill="#6B7280">fitcoach.app · Empezá hoy, sin tarjeta de crédito</text>
 </svg>

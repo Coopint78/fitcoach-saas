@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- App icon: lime background rounded square + zap -->
   <rect width="512" height="512" rx="114" fill="#A3E635"/>
-  <!-- Zap bolt, centered, geometric -->
-  <path d="M296 60L172 276h96l-52 176L340 236h-96l52-176z" fill="#111827"/>
+  <!-- Zap centered: bounding box x[103,409] y[86,426], center=(256,256) -->
+  <path d="M273 86 L103 290 H256 L239 426 L409 222 H256 Z" fill="#111827"/>
 </svg>

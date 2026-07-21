@@ -1,5 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" fill="none">
-  <!-- Android adaptive icon foreground (foreground content in 72x72 safe zone of 108x108) -->
-  <!-- Just the zap, no background — bg is separate -->
-  <path d="M64 18L40 58h20l-12 32L72 48H52l12-30z" fill="#111827"/>
+  <!-- Bolt centered at (54,54): bbox x[24,84] y[21,88] center=(54,54.5)≈(54,54) -->
+  <path d="M57 21 L24 61 H54 L51 88 L84 48 H54 Z" fill="#111827"/>
 </svg>

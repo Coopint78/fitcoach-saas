@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 52" fill="none">
-  <!-- Icon: lime square with zap -->
   <rect x="0" y="2" width="48" height="48" rx="12" fill="#A3E635"/>
-  <path d="M28 6L18 28h8l-2 18L34 24h-8l2-18z" fill="#111827"/>
-  <!-- Wordmark dark -->
-  <text x="62" y="34" font-family="Inter, -apple-system, sans-serif" font-size="26" font-weight="700" fill="#111827" letter-spacing="-0.5">FitCoach</text>
+  <path d="M26 10 L10 29 H24 L22 42 L38 23 H24 Z" fill="#111827"/>
+  <text x="62" y="34" font-family="Inter,-apple-system,sans-serif" font-size="26" font-weight="700" fill="#111827" letter-spacing="-0.5">FitCoach</text>
 </svg>

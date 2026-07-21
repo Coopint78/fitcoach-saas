@@ -1,60 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 500" fill="none">
-  <!-- Wide landing page banner / hero background -->
   <rect width="1440" height="500" fill="#0F1117"/>
-  <!-- Lime accent blobs -->
   <ellipse cx="1200" cy="180" rx="380" ry="300" fill="#A3E635" opacity="0.06"/>
   <ellipse cx="900" cy="480" rx="300" ry="200" fill="#A3E635" opacity="0.04"/>
-  <!-- Subtle grid -->
   <defs>
     <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
       <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.04"/>
     </pattern>
   </defs>
   <rect width="1440" height="500" fill="url(#grid)"/>
-  <!-- Icon -->
   <rect x="120" y="170" width="72" height="72" rx="16" fill="#A3E635"/>
-  <path d="M161 178L145 210h14l-8 30L175 206h-14l0-28z" fill="#111827"/>
-  <!-- Headline -->
-  <text x="220" y="225" font-family="Inter, -apple-system, sans-serif" font-size="52" font-weight="800" fill="#FFFFFF" letter-spacing="-1.5">Entrená mejor a tus clientes.</text>
-  <text x="220" y="285" font-family="Inter, -apple-system, sans-serif" font-size="22" font-weight="400" fill="#6B7280">Rutinas, seguimiento y portal del cliente — todo desde un solo lugar.</text>
-  <!-- CTAs -->
+  <!-- Bolt centered in 72x72 at (120,170): center=(156,206), scale=2.22 -->
+  <path d="M158 184 L136 211 H156 L154 228 L176 202 H156 Z" fill="#111827"/>
+  <text x="220" y="225" font-family="Inter,-apple-system,sans-serif" font-size="52" font-weight="800" fill="#FFFFFF" letter-spacing="-1.5">Entrená mejor a tus clientes.</text>
+  <text x="220" y="285" font-family="Inter,-apple-system,sans-serif" font-size="22" font-weight="400" fill="#6B7280">Rutinas, seguimiento y portal del cliente — todo desde un solo lugar.</text>
   <rect x="220" y="320" width="220" height="52" rx="12" fill="#A3E635"/>
-  <text x="330" y="352" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#111827" text-anchor="middle">Empezar gratis →</text>
+  <text x="330" y="352" font-family="Inter,-apple-system,sans-serif" font-size="16" font-weight="700" fill="#111827" text-anchor="middle">Empezar gratis →</text>
   <rect x="458" y="320" width="170" height="52" rx="12" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.2"/>
-  <text x="543" y="352" font-family="Inter, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#9CA3AF" text-anchor="middle">Ver precios</text>
-  <!-- Badge -->
+  <text x="543" y="352" font-family="Inter,-apple-system,sans-serif" font-size="16" font-weight="600" fill="#9CA3AF" text-anchor="middle">Ver precios</text>
   <rect x="220" y="146" width="190" height="30" rx="15" fill="#A3E635" opacity="0.12" stroke="#A3E635" stroke-width="1" stroke-opacity="0.3"/>
-  <text x="315" y="166" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#A3E635" text-anchor="middle">14 días de prueba gratis</text>
-  <!-- Right: floating UI card -->
+  <text x="315" y="166" font-family="Inter,-apple-system,sans-serif" font-size="13" font-weight="600" fill="#A3E635" text-anchor="middle">14 días de prueba gratis</text>
   <rect x="860" y="80" width="460" height="340" rx="20" fill="#1A2035" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
-  <!-- Card header bar -->
   <rect x="880" y="104" width="180" height="10" rx="5" fill="#ffffff" opacity="0.15"/>
   <rect x="880" y="124" width="110" height="7" rx="3.5" fill="#ffffff" opacity="0.07"/>
-  <!-- Stat mini cards -->
   <rect x="880" y="148" width="130" height="74" rx="12" fill="#0F1117"/>
-  <rect x="884" y="152" width="36" height="36" rx="8" fill="#A3E635" opacity="0.2"/>
   <rect x="880" y="196" width="60" height="8" rx="4" fill="#A3E635" opacity="0.5"/>
-  <rect x="880" y="210" width="85" height="6" rx="3" fill="#ffffff" opacity="0.07"/>
   <rect x="1024" y="148" width="130" height="74" rx="12" fill="#0F1117"/>
-  <rect x="1028" y="152" width="36" height="36" rx="8" fill="#A3E635" opacity="0.12"/>
   <rect x="1024" y="196" width="50" height="8" rx="4" fill="#ffffff" opacity="0.25"/>
-  <rect x="1024" y="210" width="75" height="6" rx="3" fill="#ffffff" opacity="0.07"/>
-  <!-- Client rows -->
   <rect x="880" y="238" width="420" height="48" rx="10" fill="#0F1117"/>
   <circle cx="904" cy="262" r="13" fill="#A3E635" opacity="0.2"/>
   <rect x="924" y="252" width="110" height="7" rx="3.5" fill="#ffffff" opacity="0.25"/>
   <rect x="924" y="266" width="70" height="5" rx="2.5" fill="#ffffff" opacity="0.09"/>
-  <rect x="1258" y="254" width="36" height="16" rx="8" fill="#A3E635" opacity="0.25"/>
   <rect x="880" y="296" width="420" height="48" rx="10" fill="#0F1117"/>
   <circle cx="904" cy="320" r="13" fill="#A3E635" opacity="0.15"/>
   <rect x="924" y="310" width="130" height="7" rx="3.5" fill="#ffffff" opacity="0.2"/>
-  <rect x="924" y="324" width="85" height="5" rx="2.5" fill="#ffffff" opacity="0.09"/>
-  <rect x="1258" y="312" width="36" height="16" rx="8" fill="#ffffff" opacity="0.07"/>
-  <!-- Progress bars -->
-  <rect x="880" y="358" width="420" height="7" rx="3.5" fill="#0F1117"/>
   <rect x="880" y="358" width="280" height="7" rx="3.5" fill="#A3E635" opacity="0.5"/>
-  <rect x="880" y="374" width="420" height="7" rx="3.5" fill="#0F1117"/>
   <rect x="880" y="374" width="180" height="7" rx="3.5" fill="#A3E635" opacity="0.35"/>
-  <rect x="880" y="390" width="420" height="7" rx="3.5" fill="#0F1117"/>
   <rect x="880" y="390" width="340" height="7" rx="3.5" fill="#A3E635" opacity="0.45"/>
 </svg>
