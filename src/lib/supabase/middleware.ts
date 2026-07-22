@@ -49,13 +49,14 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ["/", "/login", "/registro", "/precios"];
+  const publicPaths = ["/", "/login", "/registro", "/precios", "/forgot-password", "/terminos"];
   const isPublic =
     publicPaths.includes(pathname) ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/invitacion/") ||
     pathname.startsWith("/api/invitacion") ||
-    pathname.startsWith("/api/admin/");
+    pathname.startsWith("/api/admin/") ||
+    pathname.startsWith("/entrenadores");
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
