@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 
-const PLATFORM_FEE_PERCENT = 10;
+const PLATFORM_FEE_PERCENT = 5;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
