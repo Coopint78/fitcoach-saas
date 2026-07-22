@@ -37,10 +37,18 @@ export default function StripeButtons({
 
   if (isActive && hasStripeCustomer) {
     return (
-      <Button onClick={handlePortal} disabled={loading} variant="outline" className="gap-2">
-        <ExternalLink className="h-4 w-4" />
-        {loading ? t("stripe", "redirecting") : t("stripe", "manage")}
-      </Button>
+      <div className="space-y-3">
+        <Button onClick={handlePortal} disabled={loading} variant="outline" className="gap-2">
+          <ExternalLink className="h-4 w-4" />
+          {loading ? t("stripe", "redirecting") : t("stripe", "manage")}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          {t("stripe", "cancelHint")}{" "}
+          <button onClick={handlePortal} disabled={loading} className="underline hover:text-foreground transition-colors">
+            {t("stripe", "cancelLink")}
+          </button>
+        </p>
+      </div>
     );
   }
 

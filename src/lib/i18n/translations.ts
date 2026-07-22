@@ -442,6 +442,8 @@ export const translations = {
       redirecting: "Redirigiendo...",
       errorCheckout: "Error al iniciar checkout",
       errorPortal: "Error al abrir portal",
+      cancelHint: "¿Querés cancelar tu plan?",
+      cancelLink: "Cancelá desde el portal de pagos.",
     },
     theme: {
       toDark: "Cambiar a modo oscuro",
@@ -919,6 +921,8 @@ export const translations = {
       redirecting: "Redirecting...",
       errorCheckout: "Error starting checkout",
       errorPortal: "Error opening portal",
+      cancelHint: "Want to cancel your plan?",
+      cancelLink: "Cancel from the payment portal.",
     },
     theme: {
       toDark: "Switch to dark mode",

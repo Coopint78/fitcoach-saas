@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Zap, CreditCard, Clock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import StripeButtons from "@/components/StripeButtons";
+import Link from "next/link";
 
 type Props = {
   trainerId: string;
@@ -139,6 +140,12 @@ export default function SubscriptionView({ trainerId, subscriptionStatus, trialE
           </div>
         </CardContent>
       </Card>
+      <p className="text-xs text-muted-foreground text-center pt-2">
+        {lang === "en" ? "By using FitCoach you agree to our" : "Al usar FitCoach aceptás nuestros"}{" "}
+        <Link href="/terminos" className="underline hover:text-foreground transition-colors">
+          {lang === "en" ? "Terms and Conditions" : "Términos y Condiciones"}
+        </Link>.
+      </p>
     </div>
   );
 }

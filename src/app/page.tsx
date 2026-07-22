@@ -7,7 +7,7 @@ import { CheckCircle, Dumbbell, Users, ClipboardList, TrendingUp } from "lucide-
 import { useLanguage } from "@/lib/i18n/context";
 
 export default function LandingPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const features = [
     { icon: Users, title: t("landing", "f1Title"), desc: t("landing", "f1Desc") },
@@ -189,8 +189,13 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 text-center text-sm text-gray-500">
+      <footer className="border-t py-8 text-center text-sm text-gray-500 space-y-2">
         <p>{t("landing", "footer")}</p>
+        <p>
+          <Link href="/terminos" className="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            {lang === "en" ? "Terms and Conditions" : "Términos y Condiciones"}
+          </Link>
+        </p>
       </footer>
     </div>
   );
