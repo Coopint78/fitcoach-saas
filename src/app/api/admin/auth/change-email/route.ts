@@ -16,15 +16,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { id, newEmail } = await request.json();
-  if (!id || !newEmail) {
+  const { id, newEmail, first_name, last_name } = await request.json();
+  if (!id) {
     return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
   }
+
+  const updates: Record<string, string | null> = {};
+  if (newEmail) updates.email = newEmail;
+  if (first_name !== undefined) updates.first_name = first_name || null;
+  if (last_name !== undefined) updates.last_name = last_name || null;
 
   const supabase = adminSupabase();
   const { error } = await supabase
     .from("admin_users")
-    .update({ email: newEmail })
+    .update(updates)
     .eq("id", id);
 
   if (error) {

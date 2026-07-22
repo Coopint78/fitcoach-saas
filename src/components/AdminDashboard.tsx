@@ -16,6 +16,8 @@ interface Trainer {
 interface AdminUser {
   id: string;
   email: string;
+  first_name: string | null;
+  last_name: string | null;
   created_at: string;
 }
 
@@ -71,9 +73,11 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const [changingPw, setChangingPw] = useState(false);
   const [pwError, setPwError] = useState("");
 
-  // Change email state
+  // Change email/name state
   const [changeEmailTarget, setChangeEmailTarget] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
   const [changingEmail, setChangingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
 
@@ -101,7 +105,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword }),
+      body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword, first_name: newFirstName || undefined, last_name: newLastName || undefined }),
     });
 
     const data = await res.json();
@@ -116,6 +120,8 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     setShowAddForm(false);
     setNewAdminEmail("");
     setNewAdminPassword("");
+    setNewFirstName("");
+    setNewLastName("");
   }
 
   async function handleDeleteAdmin(id: string) {
@@ -129,27 +135,34 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     }
   }
 
-  async function handleChangeEmail(id: string) {
+  async function handleChangeProfile(id: string) {
     setChangingEmail(true);
     setEmailError("");
 
     const res = await fetch("/api/admin/auth/change-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, newEmail }),
+      body: JSON.stringify({ id, newEmail: newEmail || undefined, first_name: newFirstName, last_name: newLastName }),
     });
 
     const data = await res.json();
     setChangingEmail(false);
 
     if (!res.ok) {
-      setEmailError(data.error ?? "Error al cambiar email");
+      setEmailError(data.error ?? "Error al guardar cambios");
       return;
     }
 
-    setAdminUsers((prev) => prev.map((u) => u.id === id ? { ...u, email: newEmail } : u));
+    setAdminUsers((prev) => prev.map((u) => u.id === id ? {
+      ...u,
+      ...(newEmail ? { email: newEmail } : {}),
+      first_name: newFirstName || u.first_name,
+      last_name: newLastName || u.last_name,
+    } : u));
     setChangeEmailTarget(null);
     setNewEmail("");
+    setNewFirstName("");
+    setNewLastName("");
   }
 
   async function handleChangePassword(email: string) {
@@ -290,6 +303,20 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                 )}
                 <div className="flex gap-3 flex-wrap">
                   <input
+                    type="text"
+                    placeholder="Nombre"
+                    value={newFirstName}
+                    onChange={(e) => setNewFirstName(e.target.value)}
+                    className="flex-1 min-w-[150px] bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Apellido"
+                    value={newLastName}
+                    onChange={(e) => setNewLastName(e.target.value)}
+                    className="flex-1 min-w-[150px] bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
+                  />
+                  <input
                     type="email"
                     placeholder="Email"
                     value={newAdminEmail}
@@ -331,7 +358,10 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                 <div key={admin.id} className="px-6 py-4 border-b border-white/5 last:border-0">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                      <p className="text-white font-medium text-sm">{admin.email}</p>
+                      {(admin.first_name || admin.last_name) && (
+                        <p className="text-white font-medium text-sm">{[admin.first_name, admin.last_name].filter(Boolean).join(" ")}</p>
+                      )}
+                      <p className={admin.first_name || admin.last_name ? "text-gray-400 text-xs" : "text-white font-medium text-sm"}>{admin.email}</p>
                       <p className="text-gray-500 text-xs mt-0.5">
                         Creado {new Date(admin.created_at).toLocaleDateString("es-AR")}
                       </p>
@@ -341,6 +371,20 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                         <div className="flex items-center gap-2 flex-wrap">
                           {emailError && <p className="text-red-400 text-xs w-full">{emailError}</p>}
                           <input
+                            type="text"
+                            placeholder="Nombre"
+                            value={newFirstName}
+                            onChange={(e) => setNewFirstName(e.target.value)}
+                            className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-36"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Apellido"
+                            value={newLastName}
+                            onChange={(e) => setNewLastName(e.target.value)}
+                            className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-36"
+                          />
+                          <input
                             type="email"
                             placeholder="Nuevo email"
                             value={newEmail}
@@ -348,14 +392,14 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-52"
                           />
                           <button
-                            onClick={() => handleChangeEmail(admin.id)}
-                            disabled={changingEmail || !newEmail}
+                            onClick={() => handleChangeProfile(admin.id)}
+                            disabled={changingEmail}
                             className="text-[#A3E635] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
                           >
                             {changingEmail ? "..." : "Guardar"}
                           </button>
                           <button
-                            onClick={() => { setChangeEmailTarget(null); setNewEmail(""); setEmailError(""); }}
+                            onClick={() => { setChangeEmailTarget(null); setNewEmail(""); setNewFirstName(""); setNewLastName(""); setEmailError(""); }}
                             className="text-gray-400 text-xs px-2 py-1.5 rounded-lg hover:text-white"
                           >
                             Cancelar
@@ -388,10 +432,10 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                       ) : (
                         <>
                           <button
-                            onClick={() => { setChangeEmailTarget(admin.id); setEmailError(""); setChangePwTarget(null); }}
+                            onClick={() => { setChangeEmailTarget(admin.id); setNewFirstName(admin.first_name ?? ""); setNewLastName(admin.last_name ?? ""); setNewEmail(admin.email); setEmailError(""); setChangePwTarget(null); }}
                             className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
                           >
-                            Cambiar email
+                            Editar perfil
                           </button>
                           <button
                             onClick={() => { setChangePwTarget(admin.id); setPwError(""); setChangeEmailTarget(null); }}

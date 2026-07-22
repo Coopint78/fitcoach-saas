@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const supabase = adminSupabase();
   const { data, error } = await supabase
     .from("admin_users")
-    .select("id, email, created_at")
+    .select("id, email, first_name, last_name, created_at")
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { email, password } = await request.json();
+  const { email, password, first_name, last_name } = await request.json();
   if (!email || !password) {
     return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
   }
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
   const supabase = adminSupabase();
   const { data, error } = await supabase
     .from("admin_users")
-    .insert({ email, password_hash: passwordHash })
-    .select("id, email, created_at")
+    .insert({ email, password_hash: passwordHash, first_name: first_name || null, last_name: last_name || null })
+    .select("id, email, first_name, last_name, created_at")
     .single();
 
   if (error) {
