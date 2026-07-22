@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Trainer {
   id: string;
@@ -70,8 +71,16 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   // Change password state
   const [changePwTarget, setChangePwTarget] = useState<string | null>(null);
   const [newPw, setNewPw] = useState("");
+  const [showNewPw, setShowNewPw] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [pwError, setPwError] = useState("");
+
+  // Reset password state
+  const [tempPassword, setTempPassword] = useState<{ adminId: string; password: string } | null>(null);
+  const [resettingPw, setResettingPw] = useState<string | null>(null);
+
+  // Show/hide password in create form
+  const [showCreatePw, setShowCreatePw] = useState(false);
 
   // Change email/name state
   const [changeEmailTarget, setChangeEmailTarget] = useState<string | null>(null);
@@ -185,6 +194,28 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
 
     setChangePwTarget(null);
     setNewPw("");
+    setShowNewPw(false);
+  }
+
+  async function handleResetPassword(admin: AdminUser) {
+    if (!confirm(`¿Generar una contraseña temporal para ${admin.email}?`)) return;
+    setResettingPw(admin.id);
+
+    const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
+    const tmp = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+
+    const res = await fetch("/api/admin/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: admin.email, newPassword: tmp }),
+    });
+
+    setResettingPw(null);
+    if (res.ok) {
+      setTempPassword({ adminId: admin.id, password: tmp });
+    } else {
+      alert("Error al resetear contraseña");
+    }
   }
 
   return (
@@ -324,14 +355,19 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                     required
                     className="flex-1 min-w-[200px] bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
                   />
-                  <input
-                    type="password"
-                    placeholder="Contraseña"
-                    value={newAdminPassword}
-                    onChange={(e) => setNewAdminPassword(e.target.value)}
-                    required
-                    className="flex-1 min-w-[200px] bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
-                  />
+                  <div className="relative flex-1 min-w-[200px]">
+                    <input
+                      type={showCreatePw ? "text" : "password"}
+                      placeholder="Contraseña"
+                      value={newAdminPassword}
+                      onChange={(e) => setNewAdminPassword(e.target.value)}
+                      required
+                      className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 pr-9 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
+                    />
+                    <button type="button" onClick={() => setShowCreatePw(!showCreatePw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                      {showCreatePw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   <button
                     type="submit"
                     disabled={addingAdmin}
@@ -408,13 +444,18 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                       ) : changePwTarget === admin.id ? (
                         <div className="flex items-center gap-2 flex-wrap">
                           {pwError && <p className="text-red-400 text-xs w-full">{pwError}</p>}
-                          <input
-                            type="password"
-                            placeholder="Nueva contraseña"
-                            value={newPw}
-                            onChange={(e) => setNewPw(e.target.value)}
-                            className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-48"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showNewPw ? "text" : "password"}
+                              placeholder="Nueva contraseña"
+                              value={newPw}
+                              onChange={(e) => setNewPw(e.target.value)}
+                              className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 pr-9 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-48"
+                            />
+                            <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                              {showNewPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
                           <button
                             onClick={() => handleChangePassword(admin.email)}
                             disabled={changingPw || !newPw}
@@ -423,7 +464,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             {changingPw ? "..." : "Guardar"}
                           </button>
                           <button
-                            onClick={() => { setChangePwTarget(null); setNewPw(""); setPwError(""); }}
+                            onClick={() => { setChangePwTarget(null); setNewPw(""); setPwError(""); setShowNewPw(false); }}
                             className="text-gray-400 text-xs px-2 py-1.5 rounded-lg hover:text-white"
                           >
                             Cancelar
@@ -438,12 +479,26 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             Editar perfil
                           </button>
                           <button
-                            onClick={() => { setChangePwTarget(admin.id); setPwError(""); setChangeEmailTarget(null); }}
+                            onClick={() => { setChangePwTarget(admin.id); setPwError(""); setChangeEmailTarget(null); setTempPassword(null); }}
                             className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
                           >
                             Cambiar contraseña
                           </button>
+                          <button
+                            onClick={() => { setTempPassword(null); handleResetPassword(admin); }}
+                            disabled={resettingPw === admin.id}
+                            className="text-yellow-400 text-xs border border-yellow-500/20 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors disabled:opacity-50"
+                          >
+                            {resettingPw === admin.id ? "..." : "Recuperar contraseña"}
+                          </button>
                         </>
+                      )}
+                      {tempPassword?.adminId === admin.id && (
+                        <div className="flex items-center gap-2 bg-[#A3E635]/10 border border-[#A3E635]/30 rounded-lg px-3 py-1.5">
+                          <span className="text-[#A3E635] text-xs font-mono">{tempPassword.password}</span>
+                          <button onClick={() => { navigator.clipboard.writeText(tempPassword.password); }} className="text-[#A3E635]/60 hover:text-[#A3E635] text-xs">copiar</button>
+                          <button onClick={() => setTempPassword(null)} className="text-gray-500 hover:text-white text-xs ml-1">✕</button>
+                        </div>
                       )}
                       <button
                         onClick={() => handleDeleteAdmin(admin.id)}
