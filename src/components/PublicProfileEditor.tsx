@@ -84,9 +84,8 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
             {t("publicProfile", "visibilityDesc")} <Link href="/entrenadores" className="text-indigo-600 hover:underline">fit-coach.vip/entrenadores</Link>.
           </p>
           <Button
-            variant={form.public_profile ? "destructive" : "default"}
             size="sm"
-            className="rounded-xl"
+            className={`rounded-xl font-semibold ${form.public_profile ? "bg-red-600 hover:bg-red-700 text-white" : ""}`}
             onClick={() => update("public_profile", !form.public_profile)}
           >
             {form.public_profile ? t("publicProfile", "hide") : t("publicProfile", "publish")}

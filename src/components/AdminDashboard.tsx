@@ -229,7 +229,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               tab === t
                 ? "bg-[#A3E635] text-[#111827]"
-                : "text-gray-400 hover:text-white"
+                : "text-gray-300 hover:text-white"
             }`}
           >
             {t === "overview" ? "Overview" : "Gestión de admins"}
@@ -364,7 +364,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                       required
                       className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 pr-9 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
                     />
-                    <button type="button" onClick={() => setShowCreatePw(!showCreatePw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                    <button type="button" onClick={() => setShowCreatePw(!showCreatePw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
                       {showCreatePw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -378,7 +378,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                   <button
                     type="button"
                     onClick={() => setShowAddForm(false)}
-                    className="text-gray-400 text-sm px-3 py-2 rounded-lg hover:text-white transition-colors"
+                    className="text-gray-300 text-sm px-3 py-2 rounded-lg hover:text-white transition-colors"
                   >
                     Cancelar
                   </button>
@@ -436,7 +436,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                           </button>
                           <button
                             onClick={() => { setChangeEmailTarget(null); setNewEmail(""); setNewFirstName(""); setNewLastName(""); setEmailError(""); }}
-                            className="text-gray-400 text-xs px-2 py-1.5 rounded-lg hover:text-white"
+                            className="text-gray-300 text-xs px-2 py-1.5 rounded-lg hover:text-white"
                           >
                             Cancelar
                           </button>
@@ -452,7 +452,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                               onChange={(e) => setNewPw(e.target.value)}
                               className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 pr-9 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-48"
                             />
-                            <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                            <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
                               {showNewPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                             </button>
                           </div>
@@ -465,7 +465,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                           </button>
                           <button
                             onClick={() => { setChangePwTarget(null); setNewPw(""); setPwError(""); setShowNewPw(false); }}
-                            className="text-gray-400 text-xs px-2 py-1.5 rounded-lg hover:text-white"
+                            className="text-gray-300 text-xs px-2 py-1.5 rounded-lg hover:text-white"
                           >
                             Cancelar
                           </button>
@@ -474,13 +474,13 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                         <>
                           <button
                             onClick={() => { setChangeEmailTarget(admin.id); setNewFirstName(admin.first_name ?? ""); setNewLastName(admin.last_name ?? ""); setNewEmail(admin.email); setEmailError(""); setChangePwTarget(null); }}
-                            className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
+                            className="text-gray-300 text-xs border border-white/20 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/40 transition-colors"
                           >
                             Editar perfil
                           </button>
                           <button
                             onClick={() => { setChangePwTarget(admin.id); setPwError(""); setChangeEmailTarget(null); setTempPassword(null); }}
-                            className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
+                            className="text-gray-300 text-xs border border-white/20 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/40 transition-colors"
                           >
                             Cambiar contraseña
                           </button>

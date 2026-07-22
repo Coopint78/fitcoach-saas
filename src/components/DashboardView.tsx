@@ -38,7 +38,7 @@ export default function DashboardView({ firstName, clientCount, routineCount, ex
             <p className="text-xs text-muted-foreground">{t("dashboard", "trialBannerSub")}</p>
           </div>
           <Link href="/dashboard/suscripcion" className="shrink-0">
-            <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-white font-semibold rounded-xl">
+            <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl">
               {t("dashboard", "activatePlan")}
             </Button>
           </Link>
