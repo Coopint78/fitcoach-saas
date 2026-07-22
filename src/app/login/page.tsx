@@ -29,6 +29,7 @@ export default function LoginPage() {
     } else {
       const role = data.user?.user_metadata?.role;
       router.push(role === "client" ? "/portal" : "/dashboard");
+      router.refresh();
     }
     setLoading(false);
   }
