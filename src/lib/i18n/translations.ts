@@ -5,6 +5,7 @@ export const translations = {
     nav: {
       home: "Inicio",
       clients: "Clientes",
+      sessions: "Sesiones",
       routines: "Rutinas",
       exercises: "Ejercicios",
       subscription: "Suscripción",
@@ -538,6 +539,7 @@ export const translations = {
     nav: {
       home: "Home",
       clients: "Clients",
+      sessions: "Sessions",
       routines: "Routines",
       exercises: "Exercises",
       subscription: "Subscription",

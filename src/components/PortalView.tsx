@@ -3,18 +3,20 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Video, MessageCircle, ClipboardList, TrendingUp } from "lucide-react";
+import { Dumbbell, Video, MessageCircle, ClipboardList, TrendingUp, Calendar, CreditCard, CheckCircle, Clock } from "lucide-react";
 import ProgressButton from "@/components/ProgressButton";
 import LogoutButton from "@/components/LogoutButton";
 import ChatWindow from "@/components/ChatWindow";
 import ProgressTracker from "@/components/ProgressTracker";
 import { useLanguage } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Exercise = { id: string; name: string; description: string | null; video_url: string | null };
 type RoutineItem = { id: string; exercise_id: string; sets: number; reps: string; order: number; exercise: Exercise };
 type Routine = { id: string; name: string; routine_items: RoutineItem[] };
 type Assignment = { id: string; routine: Routine };
+type Session = { id: string; scheduled_at: string; duration_minutes: number; title: string | null; status: string };
 
 type Props = {
   clientName: string;
@@ -24,12 +26,40 @@ type Props = {
   clientGoal: string | null;
   assignments: Assignment[];
   completedExerciseIds: string[];
+  coachingStatus: string | null;
+  coachingPriceCents: number;
+  connectEnabled: boolean;
+  upcomingSessions: Session[];
 };
 
-export default function PortalView({ clientName, clientId, trainerId, trainerName, clientGoal, assignments, completedExerciseIds }: Props) {
+export default function PortalView({
+  clientName, clientId, trainerId, trainerName, clientGoal,
+  assignments, completedExerciseIds, coachingStatus,
+  coachingPriceCents, connectEnabled, upcomingSessions,
+}: Props) {
   const { t } = useLanguage();
   const completedSet = new Set(completedExerciseIds);
-  const [tab, setTab] = useState<"routines" | "chat" | "progress">("routines");
+  const [tab, setTab] = useState<"routines" | "chat" | "progress" | "sessions" | "payments">("routines");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const isCoachingActive = coachingStatus === "active";
+
+  async function handleCoachingCheckout() {
+    setCheckoutLoading(true);
+    const res = await fetch("/api/portal/coaching-checkout", { method: "POST" });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else toast.error("Error al iniciar el pago");
+    setCheckoutLoading(false);
+  }
+
+  const tabs = [
+    { key: "routines", label: t("portal", "myRoutines"), icon: ClipboardList },
+    { key: "sessions", label: "Sesiones", icon: Calendar },
+    { key: "chat", label: "Chat", icon: MessageCircle },
+    { key: "progress", label: "Progreso", icon: TrendingUp },
+    { key: "payments", label: "Pagos", icon: CreditCard },
+  ] as const;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -48,101 +78,159 @@ export default function PortalView({ clientName, clientId, trainerId, trainerNam
 
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         {/* Tab switcher */}
-        <div className="flex gap-2">
-          <Button
-            variant={tab === "routines" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setTab("routines")}
-            className={cn("gap-1.5 rounded-xl", tab === "routines" && "bg-indigo-600 hover:bg-indigo-700")}
-          >
-            <ClipboardList className="h-4 w-4" /> {t("portal", "myRoutines")}
-          </Button>
-          <Button
-            variant={tab === "chat" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setTab("chat")}
-            className={cn("gap-1.5 rounded-xl", tab === "chat" && "bg-indigo-600 hover:bg-indigo-700")}
-          >
-            <MessageCircle className="h-4 w-4" /> Chat
-          </Button>
-          <Button
-            variant={tab === "progress" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setTab("progress")}
-            className={cn("gap-1.5 rounded-xl", tab === "progress" && "bg-indigo-600 hover:bg-indigo-700")}
-          >
-            <TrendingUp className="h-4 w-4" /> Progreso
-          </Button>
+        <div className="flex gap-2 flex-wrap">
+          {tabs.map(({ key, label, icon: Icon }) => (
+            <Button
+              key={key}
+              variant={tab === key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTab(key)}
+              className={cn("gap-1.5 rounded-xl", tab === key && "bg-indigo-600 hover:bg-indigo-700")}
+            >
+              <Icon className="h-4 w-4" /> {label}
+            </Button>
+          ))}
         </div>
 
-        {clientGoal && tab === "routines" && (
-          <p className="text-sm text-gray-600">{t("portal", "goal").replace("{goal}", clientGoal)}</p>
-        )}
-
-        {tab === "chat" ? (
-          <ChatWindow trainerId={trainerId} clientId={clientId} myRole="client" clientName={trainerName} />
-        ) : tab === "progress" ? (
-          <ProgressTracker clientId={clientId} />
-        ) : assignments.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
-            <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="font-semibold text-gray-600 mb-2">{t("portal", "noRoutines")}</h3>
-            <p className="text-sm text-gray-500">{t("portal", "noRoutinesDesc")}</p>
-          </div>
-        ) : (
-          assignments.map((a) => {
-            const routine = a.routine;
-            const items = (routine.routine_items ?? []).sort((x, y) => x.order - y.order);
-            const completedCount = items.filter(i => completedSet.has(i.exercise_id)).length;
-
-            return (
-              <Card key={a.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{routine.name}</CardTitle>
-                    <Badge variant="secondary">
-                      {t("portal", "completed").replace("{done}", String(completedCount)).replace("{total}", String(items.length))}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {items.map((item, idx) => {
-                    const isCompleted = completedSet.has(item.exercise_id);
-                    return (
-                      <div key={item.id} className={`p-4 rounded-lg border transition-colors ${isCompleted ? "bg-green-50 border-green-200" : "bg-white border-gray-200"}`}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <span className="text-xs font-bold text-gray-400 mt-1 w-5">{idx + 1}</span>
-                            <div className="space-y-1">
-                              <p className={`font-semibold text-sm ${isCompleted ? "text-green-700 line-through" : "text-gray-900"}`}>
-                                {item.exercise?.name}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                {item.sets} {t("portal", "setsX")} {item.reps}
-                              </p>
-                              {item.exercise?.description && (
-                                <p className="text-xs text-gray-500">{item.exercise.description}</p>
-                              )}
-                              {item.exercise?.video_url && (
-                                <a href={item.exercise.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline">
-                                  <Video className="h-3 w-3" /> {t("portal", "watchVideo")}
-                                </a>
-                              )}
+        {/* Routines tab */}
+        {tab === "routines" && (
+          <>
+            {clientGoal && <p className="text-sm text-gray-600">{t("portal", "goal").replace("{goal}", clientGoal)}</p>}
+            {assignments.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="font-semibold text-gray-600 mb-2">{t("portal", "noRoutines")}</h3>
+                <p className="text-sm text-gray-500">{t("portal", "noRoutinesDesc")}</p>
+              </div>
+            ) : (
+              assignments.map((a) => {
+                const routine = a.routine;
+                const items = (routine.routine_items ?? []).sort((x, y) => x.order - y.order);
+                const completedCount = items.filter(i => completedSet.has(i.exercise_id)).length;
+                return (
+                  <Card key={a.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{routine.name}</CardTitle>
+                        <Badge variant="secondary">
+                          {t("portal", "completed").replace("{done}", String(completedCount)).replace("{total}", String(items.length))}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {items.map((item, idx) => {
+                        const isCompleted = completedSet.has(item.exercise_id);
+                        return (
+                          <div key={item.id} className={`p-4 rounded-lg border transition-colors ${isCompleted ? "bg-green-50 border-green-200" : "bg-white border-gray-200"}`}>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <span className="text-xs font-bold text-gray-400 mt-1 w-5">{idx + 1}</span>
+                                <div className="space-y-1">
+                                  <p className={`font-semibold text-sm ${isCompleted ? "text-green-700 line-through" : "text-gray-900"}`}>{item.exercise?.name}</p>
+                                  <p className="text-xs text-gray-600">{item.sets} {t("portal", "setsX")} {item.reps}</p>
+                                  {item.exercise?.description && <p className="text-xs text-gray-500">{item.exercise.description}</p>}
+                                  {item.exercise?.video_url && (
+                                    <a href={item.exercise.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline">
+                                      <Video className="h-3 w-3" /> {t("portal", "watchVideo")}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                              <ProgressButton clientId={a.id} exerciseId={item.exercise_id} isCompleted={isCompleted} />
                             </div>
                           </div>
-                          <ProgressButton
-                            clientId={a.id}
-                            exerciseId={item.exercise_id}
-                            isCompleted={isCompleted}
-                          />
-                        </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </>
+        )}
+
+        {/* Sessions tab */}
+        {tab === "sessions" && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold">Próximas sesiones</h2>
+            {upcomingSessions.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No tenés sesiones agendadas próximamente</p>
+              </div>
+            ) : (
+              upcomingSessions.map((s) => {
+                const date = new Date(s.scheduled_at);
+                return (
+                  <Card key={s.id}>
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-indigo-50 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-indigo-600">{date.toLocaleDateString("es", { month: "short" }).toUpperCase()}</span>
+                        <span className="text-lg font-bold text-indigo-700">{date.getDate()}</span>
                       </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            );
-          })
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{s.title ?? "Sesión con entrenador"}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {date.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })} · {s.duration_minutes} min
+                        </p>
+                      </div>
+                      <Badge className={s.status === "completed" ? "bg-green-100 text-green-700" : "bg-indigo-100 text-indigo-700"}>
+                        {s.status === "completed" ? "Completada" : s.status === "cancelled" ? "Cancelada" : "Confirmada"}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* Chat tab */}
+        {tab === "chat" && (
+          <ChatWindow trainerId={trainerId} clientId={clientId} myRole="client" clientName={trainerName} />
+        )}
+
+        {/* Progress tab */}
+        {tab === "progress" && <ProgressTracker clientId={clientId} />}
+
+        {/* Payments tab */}
+        {tab === "payments" && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold">Coaching</h2>
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Suscripción de coaching</p>
+                    <p className="text-sm text-gray-500">con {trainerName}</p>
+                  </div>
+                  <Badge className={isCoachingActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>
+                    {isCoachingActive ? "Activa" : coachingStatus === "past_due" ? "Vencida" : "Sin suscripción"}
+                  </Badge>
+                </div>
+
+                {isCoachingActive ? (
+                  <div className="flex items-center gap-2 text-green-600 text-sm">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Tu suscripción de coaching está activa. El pago se renueva automáticamente cada mes.</span>
+                  </div>
+                ) : connectEnabled && coachingPriceCents >= 100 ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      Precio mensual: <span className="font-bold">${(coachingPriceCents / 100).toFixed(2)} USD/mes</span>
+                    </p>
+                    <Button onClick={handleCoachingCheckout} disabled={checkoutLoading} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                      <CreditCard className="h-4 w-4" />
+                      {checkoutLoading ? "Redirigiendo..." : "Activar suscripción de coaching"}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Tu entrenador aún no configuró los pagos en la plataforma.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </main>
     </div>

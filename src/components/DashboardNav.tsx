@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Zap, Users, ClipboardList, Layers, LogOut, CreditCard, Menu, X, Banknote, UserCircle } from "lucide-react";
+import { Zap, Users, ClipboardList, Layers, LogOut, CreditCard, Menu, X, Banknote, UserCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -21,6 +21,7 @@ export default function DashboardNav({ trainer }: { trainer: Trainer }) {
   const navLinks = [
     { href: "/dashboard", label: t("nav", "home"), icon: Zap },
     { href: "/dashboard/clientes", label: t("nav", "clients"), icon: Users },
+    { href: "/dashboard/sesiones", label: t("nav", "sessions"), icon: Calendar },
     { href: "/dashboard/rutinas", label: t("nav", "routines"), icon: ClipboardList },
     { href: "/dashboard/ejercicios", label: t("nav", "exercises"), icon: Layers },
     { href: "/dashboard/connect", label: t("nav", "payments"), icon: Banknote },

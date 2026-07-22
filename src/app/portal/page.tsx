@@ -9,25 +9,24 @@ export default async function PortalPage() {
 
   const { data: client } = await supabase
     .from("clients")
-    .select("*, trainer:trainers(id, name, brand_color)")
+    .select("*, trainer:trainers(id, name, brand_color, connect_enabled, coaching_price_cents)")
     .eq("user_id", user.id)
     .single();
 
   if (!client) redirect("/login");
 
-  const { data: assignments } = await supabase
-    .from("assignments")
-    .select("*, routine:routines(id, name, routine_items(*, exercise:exercises(*)))")
-    .eq("client_id", client.id);
+  const trainer = client.trainer as {
+    id: string; name: string; brand_color: string;
+    connect_enabled: boolean; coaching_price_cents: number;
+  } | null;
 
-  const { data: logs } = await supabase
-    .from("progress_logs")
-    .select("*")
-    .eq("client_id", client.id)
-    .gte("logged_at", new Date(Date.now() - 7 * 86400000).toISOString());
+  const [assignmentsRes, logsRes, sessionsRes] = await Promise.all([
+    supabase.from("assignments").select("*, routine:routines(id, name, routine_items(*, exercise:exercises(*)))").eq("client_id", client.id),
+    supabase.from("progress_logs").select("*").eq("client_id", client.id).gte("logged_at", new Date(Date.now() - 7 * 86400000).toISOString()),
+    supabase.from("sessions").select("*").eq("client_id", client.id).gte("scheduled_at", new Date().toISOString()).order("scheduled_at", { ascending: true }).limit(10),
+  ]);
 
-  const completedIds = (logs ?? []).filter(l => l.completed).map(l => l.exercise_id);
-  const trainer = client.trainer as { id: string; name: string } | null;
+  const completedIds = (logsRes.data ?? []).filter(l => l.completed).map(l => l.exercise_id);
 
   return (
     <PortalView
@@ -36,8 +35,12 @@ export default async function PortalPage() {
       trainerId={trainer?.id ?? ""}
       trainerName={trainer?.name ?? ""}
       clientGoal={client.goal ?? null}
-      assignments={(assignments ?? []) as any}
+      assignments={(assignmentsRes.data ?? []) as any}
       completedExerciseIds={completedIds}
+      coachingStatus={client.coaching_subscription_status ?? null}
+      coachingPriceCents={trainer?.coaching_price_cents ?? 0}
+      connectEnabled={trainer?.connect_enabled ?? false}
+      upcomingSessions={(sessionsRes.data ?? []) as any}
     />
   );
 }
