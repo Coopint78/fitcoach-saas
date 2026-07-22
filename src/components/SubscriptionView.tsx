@@ -54,7 +54,7 @@ export default function SubscriptionView({ trainerId, subscriptionStatus, trialE
     : t("subscription", "inactive");
 
   return (
-    <div className="space-y-6 max-w-xl">
+    <div className="space-y-6 max-w-4xl">
       <div>
         <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mb-1">{t("subscription", "account")}</p>
         <h1 className="text-2xl font-bold">{t("subscription", "title")}</h1>
@@ -94,103 +94,98 @@ export default function SubscriptionView({ trainerId, subscriptionStatus, trialE
         </CardContent>
       </Card>
 
-      {/* Trial plan details */}
-      <Card className="rounded-2xl border-border">
-        <CardContent className="p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-semibold">{t("subscription", "trialPlan")}</p>
-              <p className="text-xs text-muted-foreground">{t("subscription", "trialPlanDesc")}</p>
-            </div>
-          </div>
-          <p className="text-sm font-medium text-muted-foreground">{t("subscription", "trialIncludes")}</p>
-          <div className="space-y-2">
-            {TRIAL_FEATURES.map((f) => (
-              <div key={f.es} className="flex items-center gap-2.5 text-sm">
-                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0">
-                  <CheckCircle className="h-3 w-3 text-muted-foreground" />
-                </div>
-                {lang === "en" ? f.en : f.es}
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground border-t border-border pt-3">{t("subscription", "trialLimit")}</p>
-        </CardContent>
-      </Card>
-
-      {/* Starter plan details */}
-      <Card className={`rounded-2xl border-2 ${isStarter ? "border-primary/40" : "border-border"}`}>
-        <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
+      {/* Plans side by side */}
+      <div className="grid md:grid-cols-3 gap-4">
+        {/* Trial */}
+        <Card className="rounded-2xl border-border">
+          <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Zap className="h-4 w-4 text-primary" />
+              <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center">
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-semibold">{t("subscription", "starterPlan")}</p>
-                <p className="text-xs text-muted-foreground">{t("subscription", "starterPlanDesc")}</p>
+                <p className="font-semibold">{t("subscription", "trialPlan")}</p>
+                <p className="text-xs text-muted-foreground">{t("subscription", "trialPlanDesc")}</p>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold">$19</span>
-              <span className="text-muted-foreground text-sm">{t("subscription", "priceUnit")}</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {STARTER_FEATURES.map((f) => (
-              <div key={f.es} className="flex items-center gap-2.5 text-sm">
-                <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <CheckCircle className="h-3 w-3 text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">{t("subscription", "trialIncludes")}</p>
+            <div className="space-y-2">
+              {TRIAL_FEATURES.map((f) => (
+                <div key={f.es} className="flex items-center gap-2.5 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <CheckCircle className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                  {lang === "en" ? f.en : f.es}
                 </div>
-                {lang === "en" ? f.en : f.es}
-              </div>
-            ))}
-          </div>
-          {!isStarter && !isActive && (
-            <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="starter" />
-          )}
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground border-t border-border pt-3">{t("subscription", "trialLimit")}</p>
+          </CardContent>
+        </Card>
 
-      {/* Pro plan details */}
-      <Card className={`rounded-2xl border-2 ${isActive ? "border-primary/40" : "border-border"}`}>
-        <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Zap className="h-4 w-4 text-primary" fill="currentColor" />
-              </div>
-              <div>
-                <p className="font-semibold">{t("subscription", "paidPlan")}</p>
-                <p className="text-xs text-muted-foreground">{t("subscription", "priceNote")}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold">{t("subscription", "price")}</span>
-              <span className="text-muted-foreground text-sm">{t("subscription", "priceUnit")}</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {PRO_FEATURES.map((f) => (
-              <div key={f.es} className="flex items-center gap-2.5 text-sm">
-                <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <CheckCircle className="h-3 w-3 text-primary" />
+        {/* Starter */}
+        <Card className={`rounded-2xl border-2 ${isStarter ? "border-primary/40" : "border-border"}`}>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-primary" />
                 </div>
-                {lang === "en" ? f.en : f.es}
+                <div>
+                  <p className="font-semibold">{t("subscription", "starterPlan")}</p>
+                  <p className="text-xs text-muted-foreground">$19{t("subscription", "priceUnit")}</p>
+                </div>
               </div>
-            ))}
-          </div>
-          {!isActive && !isStarter && (
-            <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="pro" />
-          )}
-          {isStarter && (
-            <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="pro" />
-          )}
-        </CardContent>
-      </Card>
+            </div>
+            <div className="space-y-2">
+              {STARTER_FEATURES.map((f) => (
+                <div key={f.es} className="flex items-center gap-2.5 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <CheckCircle className="h-3 w-3 text-primary" />
+                  </div>
+                  {lang === "en" ? f.en : f.es}
+                </div>
+              ))}
+            </div>
+            {!isStarter && !isActive && (
+              <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="starter" />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pro */}
+        <Card className={`rounded-2xl border-2 ${isActive ? "border-primary/40" : "border-border"}`}>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-primary" fill="currentColor" />
+                </div>
+                <div>
+                  <p className="font-semibold">{t("subscription", "paidPlan")}</p>
+                  <p className="text-xs text-muted-foreground">$29{t("subscription", "priceUnit")}</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {PRO_FEATURES.map((f) => (
+                <div key={f.es} className="flex items-center gap-2.5 text-sm">
+                  <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <CheckCircle className="h-3 w-3 text-primary" />
+                  </div>
+                  {lang === "en" ? f.en : f.es}
+                </div>
+              ))}
+            </div>
+            {(!isActive && !isStarter) && (
+              <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="pro" />
+            )}
+            {isStarter && (
+              <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="pro" />
+            )}
+          </CardContent>
+        </Card>
+      </div>
       <p className="text-xs text-muted-foreground text-center pt-2">
         {lang === "en" ? "By using FitCoach you agree to our" : "Al usar FitCoach aceptás nuestros"}{" "}
         <Link href="/terminos" className="underline hover:text-foreground transition-colors">
