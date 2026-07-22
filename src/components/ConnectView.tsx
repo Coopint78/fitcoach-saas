@@ -94,7 +94,7 @@ export default function ConnectView({ trainer, clients }: { trainer: Trainer; cl
             <div className="space-y-3">
               <p className="text-sm text-gray-600">{t("connect", "connectDesc")}</p>
               <Link href="/dashboard/connect/onboard">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
+                <Button className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold shadow-md">
                   <ExternalLink className="h-4 w-4 mr-2" /> {t("connect", "connectBtn")}
                 </Button>
               </Link>
