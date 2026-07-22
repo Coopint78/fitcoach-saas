@@ -23,14 +23,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error(`${error.message}`);
     } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      const role = user?.user_metadata?.role;
+      const role = data.user?.user_metadata?.role;
       router.push(role === "client" ? "/portal" : "/dashboard");
-      router.refresh();
     }
     setLoading(false);
   }
