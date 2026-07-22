@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/context";
 
 interface Trainer {
   id: string;
@@ -33,6 +34,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     active: "bg-green-500/15 text-green-400 border-green-500/30",
     trial: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+    trialing: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
     expired: "bg-red-500/15 text-red-400 border-red-500/30",
     canceled: "bg-gray-500/15 text-gray-400 border-gray-500/30",
   };
@@ -56,33 +58,29 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
 
 export default function AdminDashboard({ trainers: initialTrainers, totalTrainers, totalClients, adminUsers: initialAdminUsers }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<"overview" | "admins">("overview");
+  const { t, lang } = useLanguage();
+  const [tab, setTab] = useState<"overview" | "admins" | "payments">("overview");
   const [trainers, setTrainers] = useState(initialTrainers);
   const [adminUsers, setAdminUsers] = useState(initialAdminUsers);
   const [grantingPro, setGrantingPro] = useState<string | null>(null);
 
-  // Admin management state
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [addError, setAddError] = useState("");
 
-  // Change password state
   const [changePwTarget, setChangePwTarget] = useState<string | null>(null);
   const [newPw, setNewPw] = useState("");
   const [showNewPw, setShowNewPw] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [pwError, setPwError] = useState("");
 
-  // Reset password state
   const [tempPassword, setTempPassword] = useState<{ adminId: string; password: string } | null>(null);
   const [resettingPw, setResettingPw] = useState<string | null>(null);
 
-  // Show/hide password in create form
   const [showCreatePw, setShowCreatePw] = useState(false);
 
-  // Change email/name state
   const [changeEmailTarget, setChangeEmailTarget] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [newFirstName, setNewFirstName] = useState("");
@@ -90,16 +88,19 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const [changingEmail, setChangingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
 
-  const proTrainers = trainers.filter((t) => t.subscription_status === "active").length;
-  const trialTrainers = trainers.filter((t) => t.subscription_status === "trial").length;
+  const proTrainers = trainers.filter((tr) => tr.subscription_status === "active").length;
+  const trialTrainers = trainers.filter((tr) => tr.subscription_status === "trial" || tr.subscription_status === "trialing").length;
+  const paidTrainers = trainers.filter((tr) => tr.subscription_status === "active" && !tr.is_pro_free);
+  const mrr = paidTrainers.length * 29;
+  const commission = mrr * 0.05;
 
   async function handleGrantPro(trainerId: string) {
     setGrantingPro(trainerId);
     const res = await fetch(`/api/admin/trainers/${trainerId}/grant-pro`, { method: "POST" });
     if (res.ok) {
       setTrainers((prev) =>
-        prev.map((t) =>
-          t.id === trainerId ? { ...t, is_pro_free: true, subscription_status: "active" } : t
+        prev.map((tr) =>
+          tr.id === trainerId ? { ...tr, is_pro_free: true, subscription_status: "active" } : tr
         )
       );
     }
@@ -121,7 +122,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     setAddingAdmin(false);
 
     if (!res.ok) {
-      setAddError(data.error ?? "Error al crear admin");
+      setAddError(data.error ?? t("admin", "errorUpdate"));
       return;
     }
 
@@ -134,13 +135,13 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   }
 
   async function handleDeleteAdmin(id: string) {
-    if (!confirm("¿Eliminar este admin?")) return;
+    if (!confirm(t("admin", "confirmDelete"))) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     if (res.ok) {
       setAdminUsers((prev) => prev.filter((u) => u.id !== id));
     } else {
       const data = await res.json();
-      alert(data.error ?? "Error al eliminar");
+      alert(data.error ?? t("admin", "errorDelete"));
     }
   }
 
@@ -158,7 +159,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     setChangingEmail(false);
 
     if (!res.ok) {
-      setEmailError(data.error ?? "Error al guardar cambios");
+      setEmailError(data.error ?? t("admin", "errorUpdate"));
       return;
     }
 
@@ -188,7 +189,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     setChangingPw(false);
 
     if (!res.ok) {
-      setPwError(data.error ?? "Error al cambiar contraseña");
+      setPwError(data.error ?? t("admin", "errorUpdate"));
       return;
     }
 
@@ -198,7 +199,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   }
 
   async function handleResetPassword(admin: AdminUser) {
-    if (!confirm(`¿Generar una contraseña temporal para ${admin.email}?`)) return;
+    if (!confirm(t("admin", "confirmReset").replace("{email}", admin.email))) return;
     setResettingPw(admin.id);
 
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
@@ -214,61 +215,65 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     if (res.ok) {
       setTempPassword({ adminId: admin.id, password: tmp });
     } else {
-      alert("Error al resetear contraseña");
+      alert(t("admin", "errorReset"));
     }
   }
+
+  const tabs = [
+    { key: "overview" as const, label: t("admin", "tabOverview") },
+    { key: "admins" as const, label: t("admin", "tabAdmins") },
+    { key: "payments" as const, label: t("admin", "tabPayments") },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Tabs */}
       <div className="flex gap-1 bg-[#1a1f2e] border border-white/10 rounded-xl p-1 w-fit">
-        {(["overview", "admins"] as const).map((t) => (
+        {tabs.map((tb) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tb.key}
+            onClick={() => setTab(tb.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === t
+              tab === tb.key
                 ? "bg-[#A3E635] text-[#111827]"
                 : "text-gray-300 hover:text-white"
             }`}
           >
-            {t === "overview" ? "Overview" : "Gestión de admins"}
+            {tb.label}
           </button>
         ))}
       </div>
 
       {tab === "overview" && (
         <div className="space-y-6">
-          {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total entrenadores" value={totalTrainers} />
-            <StatCard label="Total clientes" value={totalClients} />
-            <StatCard label="Entrenadores Pro" value={proTrainers} />
-            <StatCard label="En trial" value={trialTrainers} />
+            <StatCard label={t("admin", "statTrainers")} value={totalTrainers} />
+            <StatCard label={t("admin", "statClients")} value={totalClients} />
+            <StatCard label={t("admin", "statPro")} value={proTrainers} />
+            <StatCard label={t("admin", "statTrial")} value={trialTrainers} />
           </div>
 
-          {/* Trainers table */}
           <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-white/5">
-              <h2 className="text-white font-semibold">Entrenadores</h2>
+              <h2 className="text-white font-semibold">{t("admin", "trainersHeading")}</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">Nombre</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">Email</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">Suscripción</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">Clientes</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">Registro</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">Acciones</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colName")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colEmail")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colSubscription")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colClients")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colRegistered")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colActions")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {trainers.length === 0 && (
                     <tr>
                       <td colSpan={6} className="text-center text-gray-500 py-8">
-                        No hay entrenadores registrados
+                        {t("admin", "noTrainersRow")}
                       </td>
                     </tr>
                   )}
@@ -278,7 +283,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                         {trainer.name ?? "—"}
                         {trainer.is_pro_free && (
                           <span className="ml-2 text-[10px] bg-[#A3E635]/15 text-[#A3E635] border border-[#A3E635]/30 px-1.5 py-0.5 rounded-full">
-                            gratis
+                            {t("admin", "freeBadge")}
                           </span>
                         )}
                       </td>
@@ -288,7 +293,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                       </td>
                       <td className="px-6 py-4 text-gray-300">{trainer.client_count}</td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(trainer.created_at).toLocaleDateString("es-AR")}
+                        {new Date(trainer.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
                       </td>
                       <td className="px-6 py-4">
                         {trainer.subscription_status !== "active" && (
@@ -297,7 +302,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             disabled={grantingPro === trainer.id}
                             className="text-[#A3E635] hover:text-[#b5f040] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
                           >
-                            {grantingPro === trainer.id ? "..." : "Dar Pro gratis"}
+                            {grantingPro === trainer.id ? "..." : t("admin", "grantPro")}
                           </button>
                         )}
                         {trainer.subscription_status === "active" && (
@@ -313,43 +318,100 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
         </div>
       )}
 
+      {tab === "payments" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard label={t("admin", "mrrLabel")} value={`$${mrr}`} sub="/mes" />
+            <StatCard label={t("admin", "commissionLabel")} value={`$${commission.toFixed(2)}`} sub="/mes" />
+            <StatCard label={t("admin", "paidCount")} value={paidTrainers.length} />
+            <StatCard label={t("admin", "freeCount")} value={totalTrainers - paidTrainers.length} />
+          </div>
+
+          <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5">
+              <h2 className="text-white font-semibold">{t("admin", "revenueTable")}</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colName")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colEmail")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colSubscription")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colRevenue")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colCommission")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trainers.map((trainer) => {
+                    const isPaid = trainer.subscription_status === "active" && !trainer.is_pro_free;
+                    const revenue = isPaid ? 29 : 0;
+                    return (
+                      <tr key={trainer.id} className="border-b border-white/5 last:border-0 hover:bg-white/2">
+                        <td className="px-6 py-4 text-white font-medium">
+                          {trainer.name ?? "—"}
+                          {trainer.is_pro_free && (
+                            <span className="ml-2 text-[10px] bg-[#A3E635]/15 text-[#A3E635] border border-[#A3E635]/30 px-1.5 py-0.5 rounded-full">
+                              {t("admin", "freeBadge")}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">{trainer.email}</td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={trainer.subscription_status ?? "—"} />
+                        </td>
+                        <td className="px-6 py-4 text-white font-medium">
+                          {isPaid ? "$29" : <span className="text-gray-600">—</span>}
+                        </td>
+                        <td className="px-6 py-4 text-[#A3E635]">
+                          {isPaid ? "$1.45" : <span className="text-gray-600">—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="px-6 py-3 text-gray-600 text-xs border-t border-white/5">{t("admin", "paymentsNote")}</p>
+          </div>
+        </div>
+      )}
+
       {tab === "admins" && (
         <div className="space-y-6">
           <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-              <h2 className="text-white font-semibold">Administradores</h2>
+              <h2 className="text-white font-semibold">{t("admin", "adminsHeading")}</h2>
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="bg-[#A3E635] text-[#111827] text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-[#b5f040] transition-colors"
               >
-                + Agregar admin
+                {t("admin", "addAdmin")}
               </button>
             </div>
 
             {showAddForm && (
               <form onSubmit={handleAddAdmin} className="px-6 py-4 border-b border-white/5 bg-white/2 space-y-3">
-                <p className="text-white font-medium text-sm">Nuevo administrador</p>
-                {addError && (
-                  <p className="text-red-400 text-xs">{addError}</p>
-                )}
+                <p className="text-white font-medium text-sm">{t("admin", "newAdmin")}</p>
+                {addError && <p className="text-red-400 text-xs">{addError}</p>}
                 <div className="flex gap-3 flex-wrap">
                   <input
                     type="text"
-                    placeholder="Nombre"
+                    placeholder={t("admin", "firstName")}
                     value={newFirstName}
                     onChange={(e) => setNewFirstName(e.target.value)}
                     className="flex-1 min-w-[150px] bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
                   />
                   <input
                     type="text"
-                    placeholder="Apellido"
+                    placeholder={t("admin", "lastName")}
                     value={newLastName}
                     onChange={(e) => setNewLastName(e.target.value)}
                     className="flex-1 min-w-[150px] bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50"
                   />
                   <input
                     type="email"
-                    placeholder="Email"
+                    placeholder={t("admin", "colEmail")}
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     required
@@ -358,7 +420,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                   <div className="relative flex-1 min-w-[200px]">
                     <input
                       type={showCreatePw ? "text" : "password"}
-                      placeholder="Contraseña"
+                      placeholder={t("admin", "password")}
                       value={newAdminPassword}
                       onChange={(e) => setNewAdminPassword(e.target.value)}
                       required
@@ -373,14 +435,14 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                     disabled={addingAdmin}
                     className="bg-[#A3E635] text-[#111827] text-sm font-bold px-4 py-2 rounded-lg hover:bg-[#b5f040] transition-colors disabled:opacity-50"
                   >
-                    {addingAdmin ? "Creando..." : "Crear"}
+                    {addingAdmin ? t("admin", "creating") : t("admin", "create")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowAddForm(false)}
                     className="text-gray-300 text-sm px-3 py-2 rounded-lg hover:text-white transition-colors"
                   >
-                    Cancelar
+                    {t("admin", "cancel")}
                   </button>
                 </div>
               </form>
@@ -388,7 +450,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
 
             <div>
               {adminUsers.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-8">No hay administradores</p>
+                <p className="text-gray-500 text-sm text-center py-8">{t("admin", "noAdmins")}</p>
               )}
               {adminUsers.map((admin) => (
                 <div key={admin.id} className="px-6 py-4 border-b border-white/5 last:border-0">
@@ -399,7 +461,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                       )}
                       <p className={admin.first_name || admin.last_name ? "text-gray-400 text-xs" : "text-white font-medium text-sm"}>{admin.email}</p>
                       <p className="text-gray-500 text-xs mt-0.5">
-                        Creado {new Date(admin.created_at).toLocaleDateString("es-AR")}
+                        {t("admin", "createdOn").replace("{date}", new Date(admin.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR"))}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -408,21 +470,21 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                           {emailError && <p className="text-red-400 text-xs w-full">{emailError}</p>}
                           <input
                             type="text"
-                            placeholder="Nombre"
+                            placeholder={t("admin", "firstName")}
                             value={newFirstName}
                             onChange={(e) => setNewFirstName(e.target.value)}
                             className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-36"
                           />
                           <input
                             type="text"
-                            placeholder="Apellido"
+                            placeholder={t("admin", "lastName")}
                             value={newLastName}
                             onChange={(e) => setNewLastName(e.target.value)}
                             className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-36"
                           />
                           <input
                             type="email"
-                            placeholder="Nuevo email"
+                            placeholder={t("admin", "newEmail")}
                             value={newEmail}
                             onChange={(e) => setNewEmail(e.target.value)}
                             className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-52"
@@ -432,13 +494,13 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             disabled={changingEmail}
                             className="text-[#A3E635] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
                           >
-                            {changingEmail ? "..." : "Guardar"}
+                            {changingEmail ? "..." : t("admin", "save")}
                           </button>
                           <button
                             onClick={() => { setChangeEmailTarget(null); setNewEmail(""); setNewFirstName(""); setNewLastName(""); setEmailError(""); }}
                             className="text-gray-300 text-xs px-2 py-1.5 rounded-lg hover:text-white"
                           >
-                            Cancelar
+                            {t("admin", "cancel")}
                           </button>
                         </div>
                       ) : changePwTarget === admin.id ? (
@@ -447,7 +509,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                           <div className="relative">
                             <input
                               type={showNewPw ? "text" : "password"}
-                              placeholder="Nueva contraseña"
+                              placeholder={t("admin", "newPassword")}
                               value={newPw}
                               onChange={(e) => setNewPw(e.target.value)}
                               className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 pr-9 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-48"
@@ -461,13 +523,13 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             disabled={changingPw || !newPw}
                             className="text-[#A3E635] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
                           >
-                            {changingPw ? "..." : "Guardar"}
+                            {changingPw ? "..." : t("admin", "save")}
                           </button>
                           <button
                             onClick={() => { setChangePwTarget(null); setNewPw(""); setPwError(""); setShowNewPw(false); }}
                             className="text-gray-300 text-xs px-2 py-1.5 rounded-lg hover:text-white"
                           >
-                            Cancelar
+                            {t("admin", "cancel")}
                           </button>
                         </div>
                       ) : (
@@ -476,27 +538,27 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             onClick={() => { setChangeEmailTarget(admin.id); setNewFirstName(admin.first_name ?? ""); setNewLastName(admin.last_name ?? ""); setNewEmail(admin.email); setEmailError(""); setChangePwTarget(null); }}
                             className="text-gray-300 text-xs border border-white/20 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/40 transition-colors"
                           >
-                            Editar perfil
+                            {t("admin", "editProfile")}
                           </button>
                           <button
                             onClick={() => { setChangePwTarget(admin.id); setPwError(""); setChangeEmailTarget(null); setTempPassword(null); }}
                             className="text-gray-300 text-xs border border-white/20 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/40 transition-colors"
                           >
-                            Cambiar contraseña
+                            {t("admin", "changePassword")}
                           </button>
                           <button
                             onClick={() => { setTempPassword(null); handleResetPassword(admin); }}
                             disabled={resettingPw === admin.id}
                             className="text-yellow-400 text-xs border border-yellow-500/20 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors disabled:opacity-50"
                           >
-                            {resettingPw === admin.id ? "..." : "Recuperar contraseña"}
+                            {resettingPw === admin.id ? "..." : t("admin", "resetPassword")}
                           </button>
                         </>
                       )}
                       {tempPassword?.adminId === admin.id && (
                         <div className="flex items-center gap-2 bg-[#A3E635]/10 border border-[#A3E635]/30 rounded-lg px-3 py-1.5">
                           <span className="text-[#A3E635] text-xs font-mono">{tempPassword.password}</span>
-                          <button onClick={() => { navigator.clipboard.writeText(tempPassword.password); }} className="text-[#A3E635]/60 hover:text-[#A3E635] text-xs">copiar</button>
+                          <button onClick={() => { navigator.clipboard.writeText(tempPassword.password); }} className="text-[#A3E635]/60 hover:text-[#A3E635] text-xs">{t("admin", "copy")}</button>
                           <button onClick={() => setTempPassword(null)} className="text-gray-500 hover:text-white text-xs ml-1">✕</button>
                         </div>
                       )}
@@ -504,7 +566,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                         onClick={() => handleDeleteAdmin(admin.id)}
                         className="text-red-400 text-xs border border-red-500/20 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
                       >
-                        Eliminar
+                        {t("admin", "deleteAdmin")}
                       </button>
                     </div>
                   </div>
