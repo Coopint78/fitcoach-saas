@@ -9,7 +9,7 @@ export default async function ClientesPage() {
   const user = session?.user;
   if (!user) redirect("/login");
 
-  const { data: trainer } = await supabase.from("trainers").select("id").eq("user_id", user.id).single();
+  const { data: trainer } = await supabase.from("trainers").select("id, subscription_status").eq("user_id", user.id).single();
   if (!trainer) redirect("/login");
 
   const { data: clients } = await supabase
@@ -20,7 +20,7 @@ export default async function ClientesPage() {
 
   return (
     <div className="space-y-6">
-      <ClientesPageHeader count={clients?.length ?? 0} />
+      <ClientesPageHeader count={clients?.length ?? 0} subscriptionStatus={trainer.subscription_status ?? "trialing"} />
       <ClientsView clients={clients ?? []} />
     </div>
   );

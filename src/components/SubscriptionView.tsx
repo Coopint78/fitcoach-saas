@@ -20,24 +20,35 @@ const TRIAL_FEATURES = [
   { es: "Seguimiento de progreso", en: "Progress tracking" },
 ];
 
-const PRO_FEATURES = [
-  { es: "Clientes ilimitados", en: "Unlimited clients" },
+const STARTER_FEATURES = [
+  { es: "Hasta 10 clientes", en: "Up to 10 clients" },
   { es: "Ejercicios y rutinas ilimitadas", en: "Unlimited exercises and routines" },
   { es: "Portal del cliente incluido", en: "Client portal included" },
   { es: "Seguimiento de progreso", en: "Progress tracking" },
   { es: "Soporte por email", en: "Email support" },
 ];
 
+const PRO_FEATURES = [
+  { es: "Clientes ilimitados", en: "Unlimited clients" },
+  { es: "Ejercicios y rutinas ilimitadas", en: "Unlimited exercises and routines" },
+  { es: "Portal del cliente incluido", en: "Client portal included" },
+  { es: "Seguimiento de progreso", en: "Progress tracking" },
+  { es: "Soporte prioritario", en: "Priority support" },
+];
+
 export default function SubscriptionView({ trainerId, subscriptionStatus, trialEndsAt, stripeCustomerId }: Props) {
   const { lang, t } = useLanguage();
 
   const isActive = subscriptionStatus === "active";
+  const isStarter = subscriptionStatus === "starter";
   const isTrialing = subscriptionStatus === "trialing";
   const trialEnds = trialEndsAt ? new Date(trialEndsAt) : null;
   const daysLeft = trialEnds ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86400000)) : 0;
 
   const badgeLabel = isActive
     ? t("subscription", "active")
+    : isStarter
+    ? t("subscription", "starter")
     : isTrialing
     ? t("subscription", "trialing").replace("{n}", String(daysLeft))
     : t("subscription", "inactive");
@@ -62,13 +73,13 @@ export default function SubscriptionView({ trainerId, subscriptionStatus, trialE
                 <p className="text-xs text-muted-foreground">{t("subscription", "planDesc")}</p>
               </div>
             </div>
-            <Badge className={isActive ? "bg-primary/15 text-primary border-primary/20 font-semibold" : "bg-muted text-muted-foreground font-semibold"}>
+            <Badge className={(isActive || isStarter) ? "bg-primary/15 text-primary border-primary/20 font-semibold" : "bg-muted text-muted-foreground font-semibold"}>
               {badgeLabel}
             </Badge>
           </div>
 
           <div className="pt-2">
-            <StripeButtons trainerId={trainerId} isActive={isActive} hasStripeCustomer={!!stripeCustomerId} />
+            <StripeButtons trainerId={trainerId} isActive={isActive || isStarter} hasStripeCustomer={!!stripeCustomerId} />
           </div>
 
           {isTrialing && (
@@ -110,8 +121,42 @@ export default function SubscriptionView({ trainerId, subscriptionStatus, trialE
         </CardContent>
       </Card>
 
+      {/* Starter plan details */}
+      <Card className={`rounded-2xl border-2 ${isStarter ? "border-primary/40" : "border-border"}`}>
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Zap className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">{t("subscription", "starterPlan")}</p>
+                <p className="text-xs text-muted-foreground">{t("subscription", "starterPlanDesc")}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-bold">$19</span>
+              <span className="text-muted-foreground text-sm">{t("subscription", "priceUnit")}</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {STARTER_FEATURES.map((f) => (
+              <div key={f.es} className="flex items-center gap-2.5 text-sm">
+                <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <CheckCircle className="h-3 w-3 text-primary" />
+                </div>
+                {lang === "en" ? f.en : f.es}
+              </div>
+            ))}
+          </div>
+          {!isStarter && !isActive && (
+            <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="starter" />
+          )}
+        </CardContent>
+      </Card>
+
       {/* Pro plan details */}
-      <Card className="rounded-2xl border-2 border-primary/40">
+      <Card className={`rounded-2xl border-2 ${isActive ? "border-primary/40" : "border-border"}`}>
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -138,6 +183,12 @@ export default function SubscriptionView({ trainerId, subscriptionStatus, trialE
               </div>
             ))}
           </div>
+          {!isActive && !isStarter && (
+            <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="pro" />
+          )}
+          {isStarter && (
+            <StripeButtons trainerId={trainerId} isActive={false} hasStripeCustomer={!!stripeCustomerId} plan="pro" />
+          )}
         </CardContent>
       </Card>
       <p className="text-xs text-muted-foreground text-center pt-2">

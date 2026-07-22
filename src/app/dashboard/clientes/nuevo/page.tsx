@@ -55,8 +55,19 @@ export default function NuevoClientePage() {
   const user = session?.user;
     if (!user) { router.push("/login"); return; }
 
-    const { data: trainer } = await supabase.from("trainers").select("id").eq("user_id", user.id).single();
+    const { data: trainer } = await supabase.from("trainers").select("id, subscription_status").eq("user_id", user.id).single();
     if (!trainer) { toast.error("Error al obtener perfil"); setLoading(false); return; }
+
+    const PLAN_LIMITS: Record<string, number | null> = { trialing: 5, starter: 10, active: null };
+    const limit = PLAN_LIMITS[trainer.subscription_status ?? "trialing"] ?? null;
+    if (limit !== null) {
+      const { count } = await supabase.from("clients").select("*", { count: "exact", head: true }).eq("trainer_id", trainer.id);
+      if ((count ?? 0) >= limit) {
+        toast.error(t("clients", "limitReachedMsg"));
+        setLoading(false);
+        return;
+      }
+    }
 
     const { data: client, error } = await supabase
       .from("clients")

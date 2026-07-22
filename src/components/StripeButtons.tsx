@@ -9,17 +9,23 @@ export default function StripeButtons({
   trainerId,
   isActive,
   hasStripeCustomer,
+  plan = "pro",
 }: {
   trainerId: string;
   isActive: boolean;
   hasStripeCustomer: boolean;
+  plan?: "starter" | "pro";
 }) {
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
 
   async function handleCheckout() {
     setLoading(true);
-    const res = await fetch("/api/stripe/checkout", { method: "POST" });
+    const res = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
     else toast.error(t("stripe", "errorCheckout"));
@@ -52,10 +58,14 @@ export default function StripeButtons({
     );
   }
 
+  const subscribeLabel = plan === "starter"
+    ? t("subscription", "subscribeStarter")
+    : t("subscription", "subscribePro");
+
   return (
     <Button onClick={handleCheckout} disabled={loading} className="gap-2">
       <CreditCard className="h-4 w-4" />
-      {loading ? t("stripe", "redirecting") : t("stripe", "subscribe")}
+      {loading ? t("stripe", "redirecting") : subscribeLabel}
     </Button>
   );
 }

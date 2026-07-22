@@ -43,9 +43,15 @@ export async function POST(req: Request) {
         .eq("id", clientId);
     } else {
       // Platform: trainer paying FitCoach
+      const priceId = sub.items.data[0]?.price?.id;
+      const starterPriceId = process.env.STRIPE_STARTER_PRICE_ID;
+      let status = sub.status;
+      if (sub.status === "active" && starterPriceId && priceId === starterPriceId) {
+        status = "starter";
+      }
       await supabase
         .from("trainers")
-        .update({ stripe_subscription_id: sub.id, subscription_status: sub.status })
+        .update({ stripe_subscription_id: sub.id, subscription_status: status })
         .eq("stripe_customer_id", sub.customer as string);
     }
   }
