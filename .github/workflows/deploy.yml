@@ -20,4 +20,4 @@ jobs:
             npm install --production=false
             npm run build
             pm2 restart fitcoach
-            echo "Deploy completado: $(date)"
+            echo "Deploy completado OK: $(date)"
