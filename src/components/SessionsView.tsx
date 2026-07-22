@@ -214,7 +214,7 @@ export default function SessionsView({ clients }: Props) {
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-1">
               <Label>Cliente *</Label>
-              <Select value={form.client_id} onValueChange={v => setForm(f => ({ ...f, client_id: v }))}>
+              <Select value={form.client_id} onValueChange={v => setForm(f => ({ ...f, client_id: v ?? "" }))}>
                 <SelectTrigger><SelectValue placeholder="Seleccioná un cliente" /></SelectTrigger>
                 <SelectContent>
                   {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
