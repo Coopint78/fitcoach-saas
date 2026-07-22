@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = "FitCoach <no-reply@fit-coach.vip>";
+import { transporter, FROM_EMAIL } from "@/lib/mailer";
 
 export async function POST(request: NextRequest) {
   const secret = request.headers.get("x-cron-secret");
@@ -34,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (!clientEmail) continue;
 
     try {
-      await resend.emails.send({
+      await transporter.sendMail({
         from: FROM_EMAIL,
         to: clientEmail,
         subject: `Recordatorio: sesión mañana a las ${timeStr}`,
@@ -73,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!c.email) continue;
     const trainerName = (c.trainer as { business_name?: string } | null)?.business_name ?? "Tu entrenador";
     try {
-      await resend.emails.send({
+      await transporter.sendMail({
         from: FROM_EMAIL,
         to: c.email,
         subject: "¿Todo bien? Tu entrenador te espera en FitCoach",
