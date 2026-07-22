@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/context";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ type Trainer = {
 };
 
 export default function TrainerDirectory({ trainers }: { trainers: Trainer[] }) {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
 
@@ -40,15 +42,15 @@ export default function TrainerDirectory({ trainers }: { trainers: Trainer[] }) 
       <div className="bg-indigo-600 text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <Dumbbell className="h-10 w-10 mx-auto mb-4 text-indigo-200" />
-          <h1 className="text-4xl font-bold mb-3">Encontrá tu entrenador</h1>
-          <p className="text-indigo-200 text-lg mb-8">Entrenadores certificados listos para ayudarte a alcanzar tus metas</p>
+          <h1 className="text-4xl font-bold mb-3">{t("directory", "title")}</h1>
+          <p className="text-indigo-200 text-lg mb-8">{t("directory", "subtitle")}</p>
           <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Buscar por nombre o especialidad…"
+                placeholder={t("directory", "searchPlaceholder")}
                 className="pl-9 bg-white text-gray-900 border-0 rounded-xl h-11"
               />
             </div>
@@ -57,7 +59,7 @@ export default function TrainerDirectory({ trainers }: { trainers: Trainer[] }) 
               <Input
                 value={locationFilter}
                 onChange={e => setLocationFilter(e.target.value)}
-                placeholder="Ciudad…"
+                placeholder={t("directory", "cityPlaceholder")}
                 className="pl-9 bg-white text-gray-900 border-0 rounded-xl h-11"
                 list="locations"
               />
@@ -69,11 +71,15 @@ export default function TrainerDirectory({ trainers }: { trainers: Trainer[] }) 
 
       {/* Results */}
       <div className="max-w-4xl mx-auto px-4 py-10">
-        <p className="text-sm text-gray-500 mb-6">{filtered.length} entrenador{filtered.length !== 1 ? "es" : ""} encontrado{filtered.length !== 1 ? "s" : ""}</p>
+        <p className="text-sm text-gray-500 mb-6">
+          {filtered.length === 1
+            ? t("directory", "resultsOne")
+            : t("directory", "resultsMany").replace("{n}", String(filtered.length))}
+        </p>
         {filtered.length === 0 ? (
           <div className="text-center py-16">
             <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No se encontraron entrenadores con ese criterio</p>
+            <p className="text-gray-500">{t("directory", "noResults")}</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -86,6 +92,7 @@ export default function TrainerDirectory({ trainers }: { trainers: Trainer[] }) 
 }
 
 function TrainerCard({ trainer: t }: { trainer: Parameters<typeof TrainerDirectory>[0]["trainers"][0] }) {
+  const { t: i18n } = useLanguage();
   return (
     <Link href={`/entrenadores/${t.id}`}>
       <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full rounded-2xl border-0 shadow">
@@ -115,10 +122,10 @@ function TrainerCard({ trainer: t }: { trainer: Parameters<typeof TrainerDirecto
               {t.bio && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{t.bio}</p>}
               <div className="flex items-center gap-3 mt-3">
                 {t.connect_enabled && t.coaching_price_cents ? (
-                  <span className="text-sm font-semibold text-indigo-600">${(t.coaching_price_cents / 100).toFixed(0)}/mes</span>
+                  <span className="text-sm font-semibold text-indigo-600">${(t.coaching_price_cents / 100).toFixed(0)}{i18n("directory", "perMonth")}</span>
                 ) : null}
                 {(t.client_count ?? 0) > 0 && (
-                  <span className="text-xs text-gray-400 flex items-center gap-1"><Users className="h-3 w-3" /> {t.client_count} clientes</span>
+                  <span className="text-xs text-gray-400 flex items-center gap-1"><Users className="h-3 w-3" /> {t.client_count} {i18n("directory", "clients")}</span>
                 )}
               </div>
             </div>

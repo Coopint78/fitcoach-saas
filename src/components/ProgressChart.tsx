@@ -3,6 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { format } from "date-fns";
+import { useLanguage } from "@/lib/i18n/context";
 
 type Metric = {
   logged_at: string;
@@ -15,6 +16,7 @@ type Metric = {
 type Props = { metrics: Metric[]; metric: keyof Omit<Metric, "logged_at">; label: string; color: string; unit: string };
 
 export default function ProgressChart({ metrics, metric, label, color, unit }: Props) {
+  const { t } = useLanguage();
   const data = metrics
     .filter(m => m[metric] != null)
     .map(m => ({
@@ -22,7 +24,7 @@ export default function ProgressChart({ metrics, metric, label, color, unit }: P
       value: m[metric],
     }));
 
-  if (data.length === 0) return <p className="text-sm text-muted-foreground text-center py-6">Sin registros aún</p>;
+  if (data.length === 0) return <p className="text-sm text-muted-foreground text-center py-6">{t("progress", "noRecordsChart")}</p>;
 
   return (
     <div className="h-48">

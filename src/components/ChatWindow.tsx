@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Send, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useLanguage } from "@/lib/i18n/context";
 
 type Message = {
   id: string;
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export default function ChatWindow({ trainerId, clientId, myRole, clientName }: Props) {
+  const { t } = useLanguage();
   const supabase = createClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -110,14 +112,14 @@ export default function ChatWindow({ trainerId, clientId, myRole, clientName }: 
       <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
         <MessageCircle className="h-4 w-4 text-indigo-600" />
         <span className="font-medium text-sm">{clientName}</span>
-        <span className="ml-auto w-2 h-2 rounded-full bg-green-400" title="En línea" />
+        <span className="ml-auto w-2 h-2 rounded-full bg-green-400" title={t("chat", "online")} />
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-        {loading && <p className="text-center text-sm text-muted-foreground py-8">Cargando…</p>}
+        {loading && <p className="text-center text-sm text-muted-foreground py-8">{t("chat", "loading")}</p>}
         {!loading && messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-8">No hay mensajes todavía. ¡Sé el primero!</p>
+          <p className="text-center text-sm text-muted-foreground py-8">{t("chat", "noMessages")}</p>
         )}
         {messages.map(m => {
           const isMe = m.sender_role === myRole;
@@ -147,7 +149,7 @@ export default function ChatWindow({ trainerId, clientId, myRole, clientName }: 
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-          placeholder="Escribí un mensaje…"
+          placeholder={t("chat", "placeholder")}
           className="rounded-xl"
           disabled={sending}
         />

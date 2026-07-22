@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ type Trainer = {
 };
 
 export default function PublicProfileEditor({ trainer: initial }: { trainer: Trainer }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     bio: initial.bio ?? "",
     specialty: initial.specialty ?? "",
@@ -43,8 +45,8 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
     });
     const data = await res.json();
     setSaving(false);
-    if (data.ok) toast.success("Perfil actualizado");
-    else toast.error(data.error ?? "Error al guardar");
+    if (data.ok) toast.success(t("publicProfile", "successSave"));
+    else toast.error(data.error ?? t("publicProfile", "errorSave"));
   }
 
   function update(field: string, value: string | boolean) {
@@ -57,12 +59,12 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mb-1">Mi cuenta</p>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Globe className="h-6 w-6 text-indigo-600" /> Perfil público</h1>
+          <p className="text-muted-foreground text-xs font-medium uppercase tracking-widest mb-1">{t("publicProfile", "accountLabel")}</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Globe className="h-6 w-6 text-indigo-600" /> {t("publicProfile", "title")}</h1>
         </div>
         {form.public_profile && (
           <a href={profileUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm" className="gap-2 rounded-xl"><ExternalLink className="h-4 w-4" /> Ver perfil</Button>
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl"><ExternalLink className="h-4 w-4" /> {t("publicProfile", "viewProfile")}</Button>
           </a>
         )}
       </div>
@@ -71,15 +73,15 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             {form.public_profile ? <Eye className="h-5 w-5 text-green-500" /> : <EyeOff className="h-5 w-5 text-gray-400" />}
-            Visibilidad en el directorio
+            {t("publicProfile", "visibilityTitle")}
             <Badge className={form.public_profile ? "bg-green-100 text-green-700 ml-auto" : "bg-gray-100 text-gray-500 ml-auto"}>
-              {form.public_profile ? "Visible" : "Oculto"}
+              {form.public_profile ? t("publicProfile", "visible") : t("publicProfile", "hidden")}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600 mb-3">
-            Al activarlo, tu perfil aparece en <Link href="/entrenadores" className="text-indigo-600 hover:underline">fit-coach.vip/entrenadores</Link> y cualquier persona puede encontrarte.
+            {t("publicProfile", "visibilityDesc")} <Link href="/entrenadores" className="text-indigo-600 hover:underline">fit-coach.vip/entrenadores</Link>.
           </p>
           <Button
             variant={form.public_profile ? "destructive" : "default"}
@@ -87,42 +89,42 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
             className="rounded-xl"
             onClick={() => update("public_profile", !form.public_profile)}
           >
-            {form.public_profile ? "Ocultar mi perfil" : "Publicar mi perfil"}
+            {form.public_profile ? t("publicProfile", "hide") : t("publicProfile", "publish")}
           </Button>
         </CardContent>
       </Card>
 
       <Card className="rounded-2xl">
-        <CardHeader className="pb-2"><CardTitle className="text-base">Información del perfil</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-base">{t("publicProfile", "infoTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Especialidad</Label>
-            <Input value={form.specialty} onChange={e => update("specialty", e.target.value)} placeholder="Ej: Pérdida de peso, Musculación, Running" className="rounded-xl h-10" />
+            <Label>{t("publicProfile", "specialty")}</Label>
+            <Input value={form.specialty} onChange={e => update("specialty", e.target.value)} placeholder={t("publicProfile", "specialtyPlaceholder")} className="rounded-xl h-10" />
           </div>
           <div className="space-y-1.5">
-            <Label>Ubicación</Label>
-            <Input value={form.location} onChange={e => update("location", e.target.value)} placeholder="Ciudad, País" className="rounded-xl h-10" />
+            <Label>{t("publicProfile", "location")}</Label>
+            <Input value={form.location} onChange={e => update("location", e.target.value)} placeholder={t("publicProfile", "locationPlaceholder")} className="rounded-xl h-10" />
           </div>
           <div className="space-y-1.5">
-            <Label>Foto de perfil (URL)</Label>
+            <Label>{t("publicProfile", "photoUrl")}</Label>
             <Input value={form.profile_photo} onChange={e => update("profile_photo", e.target.value)} placeholder="https://…" className="rounded-xl h-10" />
           </div>
           <div className="space-y-1.5">
-            <Label>Biografía</Label>
-            <Textarea value={form.bio} onChange={e => update("bio", e.target.value)} placeholder="Contá tu experiencia, certificaciones y cómo trabajás con tus clientes…" rows={4} className="rounded-xl" />
+            <Label>{t("publicProfile", "bio")}</Label>
+            <Textarea value={form.bio} onChange={e => update("bio", e.target.value)} placeholder={t("publicProfile", "bioPlaceholder")} rows={4} className="rounded-xl" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Instagram</Label>
-              <Input value={form.instagram} onChange={e => update("instagram", e.target.value)} placeholder="@tuusuario" className="rounded-xl h-10" />
+              <Label>{t("publicProfile", "instagram")}</Label>
+              <Input value={form.instagram} onChange={e => update("instagram", e.target.value)} placeholder={t("publicProfile", "instagramPlaceholder")} className="rounded-xl h-10" />
             </div>
             <div className="space-y-1.5">
-              <Label>Sitio web</Label>
-              <Input value={form.website} onChange={e => update("website", e.target.value)} placeholder="tuweb.com" className="rounded-xl h-10" />
+              <Label>{t("publicProfile", "website")}</Label>
+              <Input value={form.website} onChange={e => update("website", e.target.value)} placeholder={t("publicProfile", "websitePlaceholder")} className="rounded-xl h-10" />
             </div>
           </div>
           <Button onClick={handleSave} disabled={saving} className="w-full h-11 rounded-xl font-semibold">
-            {saving ? "Guardando…" : "Guardar cambios"}
+            {saving ? t("publicProfile", "saving") : t("publicProfile", "saveChanges")}
           </Button>
         </CardContent>
       </Card>

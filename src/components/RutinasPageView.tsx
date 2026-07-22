@@ -36,7 +36,7 @@ export default function RutinasPageView({ routines }: { routines: Routine[] }) {
     });
     const data = await res.json();
     setDuplicating(false);
-    if (!res.ok) { toast.error(data.error ?? "Error al duplicar"); return; }
+    if (!res.ok) { toast.error(data.error ?? t("routines", "errorDuplicate")); return; }
     toast.success(`Rutina "${data.name}" creada`);
     setDuplicateTarget(null);
     router.refresh();
@@ -79,7 +79,7 @@ export default function RutinasPageView({ routines }: { routines: Routine[] }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold truncate">{r.name}</p>
-                        {r.is_template && <Badge variant="secondary" className="text-xs shrink-0">Plantilla</Badge>}
+                        {r.is_template && <Badge variant="secondary" className="text-xs shrink-0">{t("routines", "templateBadge")}</Badge>}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{exCount} {t("routines", "exercises")}</p>
                     </div>
@@ -89,8 +89,8 @@ export default function RutinasPageView({ routines }: { routines: Routine[] }) {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 shrink-0 opacity-0 group-hover:opacity-100 rounded-lg"
-                    title="Duplicar rutina"
-                    onClick={e => { e.preventDefault(); setDuplicateTarget(r); setNewName(`${r.name} (copia)`); }}
+                    title={t("routines", "duplicateBtnTitle")}
+                    onClick={e => { e.preventDefault(); setDuplicateTarget(r); setNewName(`${r.name} ${t("routines", "copyNameSuffix")}`); }}
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
@@ -105,15 +105,15 @@ export default function RutinasPageView({ routines }: { routines: Routine[] }) {
       <Dialog open={!!duplicateTarget} onOpenChange={v => { if (!v) setDuplicateTarget(null); }}>
         <DialogContent className="rounded-2xl max-w-sm">
           <DialogHeader>
-            <DialogTitle>Duplicar rutina</DialogTitle>
+            <DialogTitle>{t("routines", "duplicateTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label>Nombre de la copia</Label>
+              <Label>{t("routines", "copyNameLabel")}</Label>
               <Input value={newName} onChange={e => setNewName(e.target.value)} className="rounded-xl h-11" autoFocus />
             </div>
             <Button onClick={handleDuplicate} disabled={duplicating} className="w-full h-11 rounded-xl font-semibold">
-              {duplicating ? "Duplicando…" : "Crear copia"}
+              {duplicating ? t("routines", "duplicating") : t("routines", "createCopy")}
             </Button>
           </div>
         </DialogContent>
