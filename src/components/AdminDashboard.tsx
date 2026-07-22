@@ -71,6 +71,12 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const [changingPw, setChangingPw] = useState(false);
   const [pwError, setPwError] = useState("");
 
+  // Change email state
+  const [changeEmailTarget, setChangeEmailTarget] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
   const proTrainers = trainers.filter((t) => t.subscription_status === "active").length;
   const trialTrainers = trainers.filter((t) => t.subscription_status === "trial").length;
 
@@ -121,6 +127,29 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
       const data = await res.json();
       alert(data.error ?? "Error al eliminar");
     }
+  }
+
+  async function handleChangeEmail(id: string) {
+    setChangingEmail(true);
+    setEmailError("");
+
+    const res = await fetch("/api/admin/auth/change-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, newEmail }),
+    });
+
+    const data = await res.json();
+    setChangingEmail(false);
+
+    if (!res.ok) {
+      setEmailError(data.error ?? "Error al cambiar email");
+      return;
+    }
+
+    setAdminUsers((prev) => prev.map((u) => u.id === id ? { ...u, email: newEmail } : u));
+    setChangeEmailTarget(null);
+    setNewEmail("");
   }
 
   async function handleChangePassword(email: string) {
@@ -308,7 +337,31 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {changePwTarget === admin.id ? (
+                      {changeEmailTarget === admin.id ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {emailError && <p className="text-red-400 text-xs w-full">{emailError}</p>}
+                          <input
+                            type="email"
+                            placeholder="Nuevo email"
+                            value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)}
+                            className="bg-[#0f1117] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#A3E635]/50 w-52"
+                          />
+                          <button
+                            onClick={() => handleChangeEmail(admin.id)}
+                            disabled={changingEmail || !newEmail}
+                            className="text-[#A3E635] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
+                          >
+                            {changingEmail ? "..." : "Guardar"}
+                          </button>
+                          <button
+                            onClick={() => { setChangeEmailTarget(null); setNewEmail(""); setEmailError(""); }}
+                            className="text-gray-400 text-xs px-2 py-1.5 rounded-lg hover:text-white"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : changePwTarget === admin.id ? (
                         <div className="flex items-center gap-2 flex-wrap">
                           {pwError && <p className="text-red-400 text-xs w-full">{pwError}</p>}
                           <input
@@ -333,12 +386,20 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => { setChangePwTarget(admin.id); setPwError(""); }}
-                          className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
-                        >
-                          Cambiar contraseña
-                        </button>
+                        <>
+                          <button
+                            onClick={() => { setChangeEmailTarget(admin.id); setEmailError(""); setChangePwTarget(null); }}
+                            className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
+                          >
+                            Cambiar email
+                          </button>
+                          <button
+                            onClick={() => { setChangePwTarget(admin.id); setPwError(""); setChangeEmailTarget(null); }}
+                            className="text-gray-400 text-xs border border-white/10 px-3 py-1.5 rounded-lg hover:text-white hover:border-white/20 transition-colors"
+                          >
+                            Cambiar contraseña
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => handleDeleteAdmin(admin.id)}
