@@ -104,7 +104,7 @@ export default function TerminosPage() {
           <section>
             <h2 className="text-lg font-semibold mb-3">11. Contacto</h2>
             <p className="text-muted-foreground">
-              Para consultas sobre estos términos, puede contactarnos en: <a href="mailto:info@ledorvador.us" className="text-primary hover:underline">info@ledorvador.us</a>
+              Para consultas sobre estos términos, puede contactarnos en: <a href="mailto:info@fit-coach.vip" className="text-primary hover:underline">info@fit-coach.vip</a>
             </p>
           </section>
 
