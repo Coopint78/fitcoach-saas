@@ -92,7 +92,7 @@ export default function ConnectView({ trainer, clients }: { trainer: Trainer; cl
                 Conectá tu cuenta de Stripe para cobrar a tus clientes. FitCoach retiene un 10% de comisión.
               </p>
               <Link href="/dashboard/connect/onboard">
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
                   <ExternalLink className="h-4 w-4 mr-2" /> Conectar con Stripe
                 </Button>
               </Link>
