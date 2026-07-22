@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       // Platform: trainer paying FitCoach
       const priceId = sub.items.data[0]?.price?.id;
       const starterPriceId = process.env.STRIPE_STARTER_PRICE_ID;
-      let status = sub.status;
+      let status: string = sub.status;
       if (sub.status === "active" && starterPriceId && priceId === starterPriceId) {
         status = "starter";
       }
