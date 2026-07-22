@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Zap, ArrowLeft, CheckCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -20,14 +19,16 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
+    const res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
     });
-    if (error) {
-      toast.error(error.message);
-    } else {
+    if (res.ok) {
       setSent(true);
+    } else {
+      const data = await res.json();
+      toast.error(data.error ?? "Error al enviar el email");
     }
     setLoading(false);
   }
