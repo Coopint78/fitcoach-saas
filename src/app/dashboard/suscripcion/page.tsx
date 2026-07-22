@@ -4,7 +4,8 @@ import SubscriptionView from "@/components/SubscriptionView";
 
 export default async function SuscripcionPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   if (!user) redirect("/login");
 
   const { data: trainer } = await supabase.from("trainers").select("*").eq("user_id", user.id).single();

@@ -13,7 +13,8 @@ export default function ConnectReturnPage() {
   useEffect(() => {
     async function check() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
       if (!user) { router.push("/login"); return; }
       const { data: trainer } = await supabase.from("trainers").select("connect_enabled").eq("user_id", user.id).single();
       setStatus(trainer?.connect_enabled ? "enabled" : "pending");

@@ -5,7 +5,8 @@ import ClientesPageHeader from "@/components/ClientesPageHeader";
 
 export default async function ClientesPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   if (!user) redirect("/login");
 
   const { data: trainer } = await supabase.from("trainers").select("id").eq("user_id", user.id).single();
