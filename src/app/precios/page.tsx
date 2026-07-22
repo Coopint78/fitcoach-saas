@@ -65,7 +65,7 @@ export default function PreciosPage() {
                 ))}
               </div>
               <Link href="/registro" className="block">
-                <Button variant="outline" className="w-full h-12 rounded-xl border-white/20 text-white hover:bg-white/10 font-bold text-base">
+                <Button className="w-full h-12 rounded-xl bg-[#A3E635] hover:bg-[#bef264] text-[#111827] font-bold text-base">
                   {t("pricing", "startBtn")}
                 </Button>
               </Link>
