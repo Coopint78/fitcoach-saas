@@ -9,7 +9,7 @@ export default function LanguageToggle() {
       variant="ghost"
       size="sm"
       onClick={() => setLang(lang === "es" ? "en" : "es")}
-      className="w-9 h-9 p-0 text-xs font-bold text-current hover:bg-white/10"
+      className="w-9 h-9 p-0 text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 border border-white/20"
     >
       {lang === "es" ? "EN" : "ES"}
     </Button>
