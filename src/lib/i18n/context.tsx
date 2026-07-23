@@ -28,12 +28,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem("fitcoach-lang") as Lang | null;
-    setLangState(stored ?? detectBrowserLang());
+    const explicit = localStorage.getItem("fitcoach-lang-explicit");
+    // Only honour stored value if the user explicitly chose it via the toggle.
+    // Otherwise always use browser language so EN browsers get EN interface.
+    setLangState(stored && explicit === "true" ? stored : detectBrowserLang());
   }, []);
 
   function setLang(l: Lang) {
     setLangState(l);
     localStorage.setItem("fitcoach-lang", l);
+    localStorage.setItem("fitcoach-lang-explicit", "true");
     document.cookie = `fitcoach-lang=${l};path=/;max-age=31536000`;
   }
 

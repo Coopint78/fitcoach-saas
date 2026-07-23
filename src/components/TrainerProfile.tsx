@@ -4,7 +4,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, MapPin, Users, Globe, DollarSign, Dumbbell } from "lucide-react";
+import { ArrowLeft, MapPin, Users, DollarSign, Dumbbell } from "lucide-react";
 
 type Trainer = {
   id: string;
@@ -14,7 +14,7 @@ type Trainer = {
   location: string | null;
   profile_photo: string | null;
   instagram: string | null;
-  website: string | null;
+  website?: string | null;
   coaching_price_cents: number | null;
   connect_enabled: boolean | null;
   client_count: number | null;
@@ -58,13 +58,6 @@ export default function TrainerProfile({ trainer: t }: { trainer: Trainer }) {
                 <a href={`https://instagram.com/${t.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="sm" className="gap-2 rounded-xl">
                     📷 @{t.instagram.replace("@", "")}
-                  </Button>
-                </a>
-              )}
-              {t.website && (
-                <a href={t.website.startsWith("http") ? t.website : `https://${t.website}`} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm" className="gap-2 rounded-xl">
-                    <Globe className="h-4 w-4" /> {i18n("trainerProfile", "website")}
                   </Button>
                 </a>
               )}
