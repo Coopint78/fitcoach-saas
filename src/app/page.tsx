@@ -186,8 +186,8 @@ export default function LandingPage() {
 
           {/* Pro */}
           <Card className="border-2 border-[#A3E635] shadow-lg relative hover:shadow-xl transition-all duration-200 cursor-pointer">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-[#A3E635] text-[#111827] px-4 font-bold">{t("landing", "popular")}</Badge>
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <Badge className="bg-[#5a8a00] text-white px-4 font-bold ring-2 ring-white">{t("landing", "popular")}</Badge>
             </div>
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl text-[#111827]">{t("landing", "planPro")}</CardTitle>
