@@ -96,14 +96,14 @@ export default function LandingPage() {
         <p className="text-center text-gray-600 mb-12">{t("landing", "pricingSubtitle")}</p>
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
           {/* Trial */}
-          <Card className="border border-gray-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer">
+          <Card className="border border-gray-200 shadow-sm hover:border-[#A3E635] hover:shadow-md transition-all duration-200 cursor-pointer">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl text-gray-700">{t("landing", "planTrial")}</CardTitle>
               <p className="text-sm text-gray-500 mt-1">{t("landing", "trialDesc")}</p>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-gray-900">$0</span>
               </div>
-              <p className="text-sm text-indigo-600 font-medium mt-1">{t("landing", "trialDays")}</p>
+              <p className="text-sm font-medium mt-1" style={{color:"#5a8a00"}}>{t("landing", "trialDays")}</p>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-gray-100">
@@ -140,7 +140,7 @@ export default function LandingPage() {
           </Card>
 
           {/* Starter */}
-          <Card className="border border-gray-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer">
+          <Card className="border border-gray-200 shadow-sm hover:border-[#A3E635] hover:shadow-md transition-all duration-200 cursor-pointer">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl text-gray-700">{t("landing", "planStarter")}</CardTitle>
               <p className="text-sm text-gray-500 mt-1">{t("landing", "starterDesc")}</p>
@@ -185,12 +185,12 @@ export default function LandingPage() {
           </Card>
 
           {/* Pro */}
-          <Card className="border-2 border-indigo-600 shadow-lg relative">
+          <Card className="border-2 border-[#A3E635] shadow-lg relative hover:shadow-xl transition-all duration-200 cursor-pointer">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-indigo-600 text-white px-4">{t("landing", "popular")}</Badge>
+              <Badge className="bg-[#A3E635] text-[#111827] px-4 font-bold">{t("landing", "popular")}</Badge>
             </div>
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-xl text-indigo-700">{t("landing", "planPro")}</CardTitle>
+              <CardTitle className="text-xl text-[#111827]">{t("landing", "planPro")}</CardTitle>
               <p className="text-sm text-gray-500 mt-1">{t("landing", "proDesc")}</p>
               <div className="mt-4">
                 <span className="text-4xl font-bold text-gray-900">$29</span>
@@ -201,15 +201,15 @@ export default function LandingPage() {
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">{t("landing", "limitClients")}</span>
-                <span className="font-bold text-indigo-600">{t("landing", "limitClientsProVal")}</span>
+                <span className="font-bold text-[#5a8a00]">{t("landing", "limitClientsProVal")}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">{t("landing", "limitRoutines")}</span>
-                <span className="font-bold text-indigo-600">{t("landing", "limitRoutinesProVal")}</span>
+                <span className="font-bold text-[#5a8a00]">{t("landing", "limitRoutinesProVal")}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">{t("landing", "limitExercises")}</span>
-                <span className="font-bold text-indigo-600">{t("landing", "limitExercisesProVal")}</span>
+                <span className="font-bold text-[#5a8a00]">{t("landing", "limitExercisesProVal")}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">{t("landing", "limitPortal")}</span>
@@ -221,11 +221,11 @@ export default function LandingPage() {
               </div>
               <div className="flex justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">{t("landing", "limitSupport")}</span>
-                <span className="font-bold text-indigo-600">{t("landing", "limitSupportProVal")}</span>
+                <span className="font-bold text-[#5a8a00]">{t("landing", "limitSupportProVal")}</span>
               </div>
               <div className="pt-3">
                 <Link href="/registro" className="block">
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700" size="lg">{t("landing", "startTrialBtn")}</Button>
+                  <Button className="w-full bg-[#A3E635] hover:bg-[#bef264] text-[#111827] font-bold" size="lg">{t("landing", "startTrialBtn")}</Button>
                 </Link>
               </div>
             </CardContent>
