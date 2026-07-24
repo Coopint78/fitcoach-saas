@@ -96,7 +96,7 @@ export default function LandingPage() {
         <p className="text-center text-gray-600 mb-12">{t("landing", "pricingSubtitle")}</p>
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
           {/* Trial */}
-          <Card className="border border-gray-200 shadow-sm">
+          <Card className="border border-gray-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl text-gray-700">{t("landing", "planTrial")}</CardTitle>
               <p className="text-sm text-gray-500 mt-1">{t("landing", "trialDesc")}</p>
@@ -140,7 +140,7 @@ export default function LandingPage() {
           </Card>
 
           {/* Starter */}
-          <Card className="border border-gray-200 shadow-sm">
+          <Card className="border border-gray-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl text-gray-700">{t("landing", "planStarter")}</CardTitle>
               <p className="text-sm text-gray-500 mt-1">{t("landing", "starterDesc")}</p>
