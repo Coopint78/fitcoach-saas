@@ -36,6 +36,7 @@ export default function PrivacyPage() {
               <li><strong className="text-foreground">Payment data:</strong> processed exclusively by Stripe. We do not store card numbers or full payment details on our servers.</li>
               <li><strong className="text-foreground">Communication data:</strong> messages exchanged between trainers and clients through the in-app chat.</li>
               <li><strong className="text-foreground">Device data:</strong> push notification tokens for sending session reminders (optional, requires explicit permission).</li>
+              <li><strong className="text-foreground">Contacts data:</strong> if you choose to use the &quot;Import from Contacts&quot; feature in the mobile app, we access your device&apos;s contact list solely to display it within the app so you can select which contacts to add as clients. We only store the name, phone number, and email address of the contacts you explicitly select. Contact data is never accessed automatically, never shared with third parties, and never used for advertising or any purpose other than creating client records at your request.</li>
             </ul>
           </section>
 
