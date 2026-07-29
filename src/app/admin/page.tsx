@@ -18,7 +18,7 @@ async function getDashboardData() {
     }),
   ]);
 
-  const dashData = dashRes.ok ? await dashRes.json() : { trainers: [], totalTrainers: 0, totalClients: 0 };
+  const dashData = dashRes.ok ? await dashRes.json() : { trainers: [], totalTrainers: 0, totalClients: 0, clients: [] };
   const usersData = usersRes.ok ? await usersRes.json() : { users: [] };
 
   return { ...dashData, adminUsers: usersData.users ?? [] };
@@ -33,6 +33,7 @@ export default async function AdminPage() {
       totalTrainers={data.totalTrainers ?? 0}
       totalClients={data.totalClients ?? 0}
       adminUsers={data.adminUsers ?? []}
+      clients={data.clients ?? []}
     />
   );
 }

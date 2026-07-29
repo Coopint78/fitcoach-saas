@@ -13,6 +13,16 @@ interface Trainer {
   client_count: number;
   created_at: string;
   is_pro_free: boolean;
+  trial_ends_at?: string;
+}
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  trainer_id: string;
+  trainer_name?: string;
+  created_at: string;
 }
 
 interface AdminUser {
@@ -28,6 +38,7 @@ interface Props {
   totalTrainers: number;
   totalClients: number;
   adminUsers: AdminUser[];
+  clients: Client[];
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -56,13 +67,19 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
   );
 }
 
-export default function AdminDashboard({ trainers: initialTrainers, totalTrainers, totalClients, adminUsers: initialAdminUsers }: Props) {
+export default function AdminDashboard({ trainers: initialTrainers, totalTrainers, totalClients, adminUsers: initialAdminUsers, clients: initialClients }: Props) {
   const router = useRouter();
   const { t, lang } = useLanguage();
-  const [tab, setTab] = useState<"overview" | "admins" | "payments">("overview");
+  const [tab, setTab] = useState<"overview" | "admins" | "payments" | "clients">("overview");
   const [trainers, setTrainers] = useState(initialTrainers);
   const [adminUsers, setAdminUsers] = useState(initialAdminUsers);
+  const [clients] = useState(initialClients);
   const [grantingPro, setGrantingPro] = useState<string | null>(null);
+
+  // Extend trial modal state
+  const [extendTrialTarget, setExtendTrialTarget] = useState<string | null>(null);
+  const [trialDate, setTrialDate] = useState("");
+  const [extendingTrial, setExtendingTrial] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -94,17 +111,45 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const mrr = paidTrainers.length * 29;
   const commission = mrr * 0.05;
 
-  async function handleGrantPro(trainerId: string) {
-    setGrantingPro(trainerId);
-    const res = await fetch(`/api/admin/trainers/${trainerId}/grant-pro`, { method: "POST" });
+  async function handleGrantPro(trainerId: string, plan: "starter" | "pro" = "pro") {
+    setGrantingPro(trainerId + ":" + plan);
+    const res = await fetch(`/api/admin/trainers/${trainerId}/grant-pro`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
     if (res.ok) {
       setTrainers((prev) =>
         prev.map((tr) =>
-          tr.id === trainerId ? { ...tr, is_pro_free: true, subscription_status: "active" } : tr
+          tr.id === trainerId
+            ? { ...tr, is_pro_free: plan === "pro", subscription_status: "active" }
+            : tr
         )
       );
     }
     setGrantingPro(null);
+  }
+
+  async function handleExtendTrial(trainerId: string) {
+    if (!trialDate) return;
+    setExtendingTrial(true);
+    const res = await fetch(`/api/admin/trainers/${trainerId}/extend-trial`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trial_ends_at: new Date(trialDate).toISOString() }),
+    });
+    if (res.ok) {
+      setTrainers((prev) =>
+        prev.map((tr) =>
+          tr.id === trainerId
+            ? { ...tr, trial_ends_at: trialDate, subscription_status: "trialing" }
+            : tr
+        )
+      );
+    }
+    setExtendingTrial(false);
+    setExtendTrialTarget(null);
+    setTrialDate("");
   }
 
   async function handleAddAdmin(e: React.FormEvent) {
@@ -223,6 +268,7 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
     { key: "overview" as const, label: t("admin", "tabOverview") },
     { key: "admins" as const, label: t("admin", "tabAdmins") },
     { key: "payments" as const, label: t("admin", "tabPayments") },
+    { key: "clients" as const, label: "Clientes" },
   ];
 
   return (
@@ -296,18 +342,35 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                         {new Date(trainer.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
                       </td>
                       <td className="px-6 py-4">
-                        {trainer.subscription_status !== "active" && (
+                        <div className="flex flex-wrap gap-2">
+                          {trainer.subscription_status !== "active" && (
+                            <>
+                              <button
+                                onClick={() => handleGrantPro(trainer.id, "starter")}
+                                disabled={grantingPro === trainer.id + ":starter"}
+                                className="text-blue-400 hover:text-blue-300 text-xs font-medium border border-blue-500/30 px-3 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                              >
+                                {grantingPro === trainer.id + ":starter" ? "..." : "Dar Starter gratis"}
+                              </button>
+                              <button
+                                onClick={() => handleGrantPro(trainer.id, "pro")}
+                                disabled={grantingPro === trainer.id + ":pro"}
+                                className="text-[#A3E635] hover:text-[#b5f040] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
+                              >
+                                {grantingPro === trainer.id + ":pro" ? "..." : t("admin", "grantPro")}
+                              </button>
+                            </>
+                          )}
                           <button
-                            onClick={() => handleGrantPro(trainer.id)}
-                            disabled={grantingPro === trainer.id}
-                            className="text-[#A3E635] hover:text-[#b5f040] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
+                            onClick={() => { setExtendTrialTarget(trainer.id); setTrialDate(""); }}
+                            className="text-yellow-400 hover:text-yellow-300 text-xs font-medium border border-yellow-500/30 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
                           >
-                            {grantingPro === trainer.id ? "..." : t("admin", "grantPro")}
+                            Extender trial
                           </button>
-                        )}
-                        {trainer.subscription_status === "active" && (
-                          <span className="text-gray-600 text-xs">—</span>
-                        )}
+                          {trainer.subscription_status === "active" && (
+                            <span className="text-gray-600 text-xs self-center">activo</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -373,6 +436,83 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
               </table>
             </div>
             <p className="px-6 py-3 text-gray-600 text-xs border-t border-white/5">{t("admin", "paymentsNote")}</p>
+          </div>
+        </div>
+      )}
+
+      {tab === "clients" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard label={t("admin", "statClients")} value={totalClients} />
+          </div>
+
+          <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5">
+              <h2 className="text-white font-semibold">Clientes</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colName")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colEmail")}</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">Entrenador</th>
+                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colRegistered")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clients.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="text-center text-gray-500 py-8">
+                        No hay clientes registrados.
+                      </td>
+                    </tr>
+                  )}
+                  {clients.map((client) => (
+                    <tr key={client.id} className="border-b border-white/5 last:border-0 hover:bg-white/2">
+                      <td className="px-6 py-4 text-white font-medium">{client.name ?? "—"}</td>
+                      <td className="px-6 py-4 text-gray-300">{client.email}</td>
+                      <td className="px-6 py-4 text-gray-300">{client.trainer_name ?? "—"}</td>
+                      <td className="px-6 py-4 text-gray-500">
+                        {new Date(client.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extend trial modal */}
+      {extendTrialTarget && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl p-6 w-full max-w-sm space-y-4 mx-4">
+            <h3 className="text-white font-semibold">Extender período de trial</h3>
+            <p className="text-gray-400 text-sm">Selecciona la nueva fecha de vencimiento del trial.</p>
+            <input
+              type="date"
+              value={trialDate}
+              onChange={(e) => setTrialDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#A3E635]/50"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleExtendTrial(extendTrialTarget)}
+                disabled={extendingTrial || !trialDate}
+                className="flex-1 bg-[#A3E635] text-[#111827] text-sm font-bold px-4 py-2 rounded-lg hover:bg-[#b5f040] transition-colors disabled:opacity-50"
+              >
+                {extendingTrial ? "Guardando..." : "Guardar"}
+              </button>
+              <button
+                onClick={() => { setExtendTrialTarget(null); setTrialDate(""); }}
+                className="flex-1 text-gray-300 text-sm border border-white/20 px-4 py-2 rounded-lg hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

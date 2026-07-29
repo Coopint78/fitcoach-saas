@@ -22,21 +22,32 @@ export async function GET(request: NextRequest) {
 
   const { data: trainers, error: trainersError } = await supabase
     .from("trainers")
-    .select("id, name, email, subscription_status, created_at, is_pro_free")
+    .select("id, name, email, subscription_status, created_at, is_pro_free, trial_ends_at")
     .order("created_at", { ascending: false });
 
   if (trainersError) {
     return NextResponse.json({ error: trainersError.message }, { status: 500 });
   }
 
-  // Count clients per trainer
-  const { data: clientCounts } = await supabase
+  // Fetch all clients with trainer info
+  const { data: clientRows } = await supabase
     .from("clients")
-    .select("trainer_id");
+    .select("id, name, email, trainer_id, created_at")
+    .order("created_at", { ascending: false });
+
+  const trainerMap: Record<string, string> = {};
+  for (const t of trainers ?? []) {
+    trainerMap[t.id] = t.name ?? t.email ?? t.id;
+  }
+
+  const clients = (clientRows ?? []).map((c) => ({
+    ...c,
+    trainer_name: trainerMap[c.trainer_id] ?? "—",
+  }));
 
   const countMap: Record<string, number> = {};
-  for (const row of clientCounts ?? []) {
-    countMap[row.trainer_id] = (countMap[row.trainer_id] ?? 0) + 1;
+  for (const c of clients) {
+    countMap[c.trainer_id] = (countMap[c.trainer_id] ?? 0) + 1;
   }
 
   const trainersWithCounts = (trainers ?? []).map((t) => ({
@@ -48,6 +59,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     trainers: trainersWithCounts,
     totalTrainers: trainersWithCounts.length,
-    totalClients: Object.values(countMap).reduce((a, b) => a + b, 0),
+    totalClients: clients.length,
+    clients,
   });
 }

@@ -20,32 +20,21 @@ export async function POST(
   }
 
   const { id } = await params;
+  const body = await request.json().catch(() => ({}));
+  const { trial_ends_at } = body;
+
+  if (!trial_ends_at) {
+    return NextResponse.json({ error: "trial_ends_at es requerido" }, { status: 400 });
+  }
+
   const supabase = adminSupabase();
 
-  const body = await request.json().catch(() => ({}));
-  const plan: string = body.plan ?? "pro";
-
-  const isProFree = plan === "pro";
-
-  // Try to set is_pro_free — column may not exist yet; handle gracefully
   const { error } = await supabase
     .from("trainers")
-    .update({ is_pro_free: isProFree, subscription_status: "active" })
+    .update({ trial_ends_at, subscription_status: "trialing" })
     .eq("id", id);
 
   if (error) {
-    // If error is about missing column, still update subscription_status
-    if (error.message.includes("is_pro_free")) {
-      const { error: fallbackError } = await supabase
-        .from("trainers")
-        .update({ subscription_status: "active" })
-        .eq("id", id);
-
-      if (fallbackError) {
-        return NextResponse.json({ error: fallbackError.message }, { status: 500 });
-      }
-      return NextResponse.json({ ok: true, note: "is_pro_free column not yet migrated" });
-    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
