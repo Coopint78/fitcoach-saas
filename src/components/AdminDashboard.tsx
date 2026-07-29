@@ -67,6 +67,8 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
   );
 }
 
+type SortKey = "name" | "email" | "subscription_status" | "client_count" | "created_at" | "expiry";
+
 export default function AdminDashboard({ trainers: initialTrainers, totalTrainers, totalClients, adminUsers: initialAdminUsers, clients: initialClients }: Props) {
   const router = useRouter();
   const { t, lang } = useLanguage();
@@ -75,6 +77,34 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const [adminUsers, setAdminUsers] = useState(initialAdminUsers);
   const [clients] = useState(initialClients);
   const [grantingPro, setGrantingPro] = useState<string | null>(null);
+
+  const [sortKey, setSortKey] = useState<SortKey>("expiry");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  function getExpiry(tr: Trainer): number {
+    if (tr.trial_ends_at) return new Date(tr.trial_ends_at).getTime();
+    return Infinity;
+  }
+
+  const sortedTrainers = [...trainers].sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === "name") cmp = (a.name ?? "").localeCompare(b.name ?? "");
+    else if (sortKey === "email") cmp = a.email.localeCompare(b.email);
+    else if (sortKey === "subscription_status") cmp = a.subscription_status.localeCompare(b.subscription_status);
+    else if (sortKey === "client_count") cmp = a.client_count - b.client_count;
+    else if (sortKey === "created_at") cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    else if (sortKey === "expiry") cmp = getExpiry(a) - getExpiry(b);
+    return sortDir === "asc" ? cmp : -cmp;
+  });
 
   // Extend trial modal state
   const [extendTrialTarget, setExtendTrialTarget] = useState<string | null>(null);
@@ -389,73 +419,112 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colName")}</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colEmail")}</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colSubscription")}</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colClients")}</th>
-                    <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colRegistered")}</th>
+                    {(
+                      [
+                        { key: "name", label: t("admin", "colName") },
+                        { key: "email", label: t("admin", "colEmail") },
+                        { key: "subscription_status", label: t("admin", "colSubscription") },
+                        { key: "client_count", label: t("admin", "colClients") },
+                        { key: "expiry", label: "Vencimiento" },
+                        { key: "created_at", label: t("admin", "colRegistered") },
+                      ] as { key: SortKey; label: string }[]
+                    ).map(({ key, label }) => (
+                      <th
+                        key={key}
+                        onClick={() => handleSort(key)}
+                        className="text-left text-gray-400 font-medium px-6 py-3 cursor-pointer select-none hover:text-white transition-colors whitespace-nowrap"
+                      >
+                        {label}
+                        <span className="ml-1 text-xs">
+                          {sortKey === key ? (sortDir === "asc" ? "↑" : "↓") : <span className="opacity-30">↕</span>}
+                        </span>
+                      </th>
+                    ))}
                     <th className="text-left text-gray-400 font-medium px-6 py-3">{t("admin", "colActions")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {trainers.length === 0 && (
+                  {sortedTrainers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-gray-500 py-8">
+                      <td colSpan={7} className="text-center text-gray-500 py-8">
                         {t("admin", "noTrainersRow")}
                       </td>
                     </tr>
                   )}
-                  {trainers.map((trainer) => (
-                    <tr key={trainer.id} className="border-b border-white/5 last:border-0 hover:bg-white/2">
-                      <td className="px-6 py-4 text-white font-medium">
-                        {trainer.name ?? "—"}
-                        {trainer.is_pro_free && (
-                          <span className="ml-2 text-[10px] bg-[#A3E635]/15 text-[#A3E635] border border-[#A3E635]/30 px-1.5 py-0.5 rounded-full">
-                            {t("admin", "freeBadge")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-gray-300">{trainer.email}</td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={trainer.subscription_status ?? "—"} />
-                      </td>
-                      <td className="px-6 py-4 text-gray-300">{trainer.client_count}</td>
-                      <td className="px-6 py-4 text-gray-500">
-                        {new Date(trainer.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          {trainer.subscription_status !== "active" && (
-                            <>
-                              <button
-                                onClick={() => handleGrantPro(trainer.id, "starter")}
-                                disabled={grantingPro === trainer.id + ":starter"}
-                                className="text-blue-400 hover:text-blue-300 text-xs font-medium border border-blue-500/30 px-3 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors disabled:opacity-50"
-                              >
-                                {grantingPro === trainer.id + ":starter" ? "..." : "Dar Starter gratis"}
-                              </button>
-                              <button
-                                onClick={() => handleGrantPro(trainer.id, "pro")}
-                                disabled={grantingPro === trainer.id + ":pro"}
-                                className="text-[#A3E635] hover:text-[#b5f040] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
-                              >
-                                {grantingPro === trainer.id + ":pro" ? "..." : t("admin", "grantPro")}
-                              </button>
-                            </>
+                  {sortedTrainers.map((trainer) => {
+                    const expiry = trainer.trial_ends_at
+                      ? new Date(trainer.trial_ends_at)
+                      : null;
+                    const daysLeft = expiry
+                      ? Math.ceil((expiry.getTime() - Date.now()) / 86400000)
+                      : null;
+                    return (
+                      <tr key={trainer.id} className="border-b border-white/5 last:border-0 hover:bg-white/2">
+                        <td className="px-6 py-4 text-white font-medium">
+                          {trainer.name ?? "—"}
+                          {trainer.is_pro_free && (
+                            <span className="ml-2 text-[10px] bg-[#A3E635]/15 text-[#A3E635] border border-[#A3E635]/30 px-1.5 py-0.5 rounded-full">
+                              {t("admin", "freeBadge")}
+                            </span>
                           )}
-                          <button
-                            onClick={() => { setExtendTrialTarget(trainer.id); setTrialDate(""); }}
-                            className="text-yellow-400 hover:text-yellow-300 text-xs font-medium border border-yellow-500/30 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
-                          >
-                            Extender trial
-                          </button>
-                          {trainer.subscription_status === "active" && (
-                            <span className="text-gray-600 text-xs self-center">activo</span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">{trainer.email}</td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={trainer.subscription_status ?? "—"} />
+                        </td>
+                        <td className="px-6 py-4 text-gray-300">{trainer.client_count}</td>
+                        <td className="px-6 py-4">
+                          {expiry ? (
+                            <span className={`text-xs font-medium ${daysLeft !== null && daysLeft <= 0 ? "text-red-400" : daysLeft !== null && daysLeft <= 7 ? "text-yellow-400" : "text-gray-300"}`}>
+                              {expiry.toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
+                              {daysLeft !== null && daysLeft > 0 && (
+                                <span className="ml-1 text-gray-500">({daysLeft}d)</span>
+                              )}
+                              {daysLeft !== null && daysLeft <= 0 && (
+                                <span className="ml-1 text-red-500">(vencido)</span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-gray-600">—</span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500">
+                          {new Date(trainer.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {trainer.subscription_status !== "active" && (
+                              <>
+                                <button
+                                  onClick={() => handleGrantPro(trainer.id, "starter")}
+                                  disabled={grantingPro === trainer.id + ":starter"}
+                                  className="text-blue-400 hover:text-blue-300 text-xs font-medium border border-blue-500/30 px-3 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                                >
+                                  {grantingPro === trainer.id + ":starter" ? "..." : "Dar Starter gratis"}
+                                </button>
+                                <button
+                                  onClick={() => handleGrantPro(trainer.id, "pro")}
+                                  disabled={grantingPro === trainer.id + ":pro"}
+                                  className="text-[#A3E635] hover:text-[#b5f040] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
+                                >
+                                  {grantingPro === trainer.id + ":pro" ? "..." : t("admin", "grantPro")}
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => { setExtendTrialTarget(trainer.id); setTrialDate(""); }}
+                              className="text-yellow-400 hover:text-yellow-300 text-xs font-medium border border-yellow-500/30 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
+                            >
+                              Extender trial
+                            </button>
+                            {trainer.subscription_status === "active" && (
+                              <span className="text-gray-600 text-xs self-center">activo</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
