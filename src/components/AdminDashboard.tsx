@@ -70,7 +70,7 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
 export default function AdminDashboard({ trainers: initialTrainers, totalTrainers, totalClients, adminUsers: initialAdminUsers, clients: initialClients }: Props) {
   const router = useRouter();
   const { t, lang } = useLanguage();
-  const [tab, setTab] = useState<"overview" | "admins" | "payments" | "clients">("overview");
+  const [tab, setTab] = useState<"overview" | "trainers" | "admins" | "payments" | "clients">("overview");
   const [trainers, setTrainers] = useState(initialTrainers);
   const [adminUsers, setAdminUsers] = useState(initialAdminUsers);
   const [clients] = useState(initialClients);
@@ -266,9 +266,10 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
 
   const tabs = [
     { key: "overview" as const, label: t("admin", "tabOverview") },
-    { key: "admins" as const, label: t("admin", "tabAdmins") },
-    { key: "payments" as const, label: t("admin", "tabPayments") },
+    { key: "trainers" as const, label: "Entrenadores" },
     { key: "clients" as const, label: "Clientes" },
+    { key: "payments" as const, label: "Ingresos $" },
+    { key: "admins" as const, label: "Configuración" },
   ];
 
   return (
@@ -299,6 +300,87 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
             <StatCard label={t("admin", "statTrial")} value={trialTrainers} />
           </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Últimos entrenadores */}
+            <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                <h2 className="text-white font-semibold text-sm">Últimos entrenadores</h2>
+                <button onClick={() => setTab("trainers")} className="text-xs text-[#A3E635] hover:underline">Ver todos</button>
+              </div>
+              <div className="divide-y divide-white/5">
+                {trainers.slice(0, 5).map((tr) => (
+                  <div key={tr.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-white text-sm font-medium">{tr.name ?? tr.email}</p>
+                      <p className="text-gray-500 text-xs">{tr.email}</p>
+                    </div>
+                    <StatusBadge status={tr.subscription_status} />
+                  </div>
+                ))}
+                {trainers.length === 0 && <p className="text-gray-500 text-sm text-center py-6">Sin entrenadores aún.</p>}
+              </div>
+            </div>
+
+            {/* Últimos clientes */}
+            <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                <h2 className="text-white font-semibold text-sm">Últimos clientes</h2>
+                <button onClick={() => setTab("clients")} className="text-xs text-[#A3E635] hover:underline">Ver todos</button>
+              </div>
+              <div className="divide-y divide-white/5">
+                {clients.slice(0, 5).map((cl) => (
+                  <div key={cl.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-white text-sm font-medium">{cl.name ?? cl.email}</p>
+                      <p className="text-gray-500 text-xs">{cl.email}</p>
+                    </div>
+                    <span className="text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(cl.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
+                    </span>
+                  </div>
+                ))}
+                {clients.length === 0 && <p className="text-gray-500 text-sm text-center py-6">Sin clientes aún.</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Trial próximos a vencer */}
+          {(() => {
+            const soon = trainers.filter((tr) => {
+              if (!tr.trial_ends_at) return false;
+              const diff = (new Date(tr.trial_ends_at).getTime() - Date.now()) / 86400000;
+              return diff >= 0 && diff <= 7;
+            });
+            if (soon.length === 0) return null;
+            return (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-yellow-500/20">
+                  <h2 className="text-yellow-300 font-semibold text-sm">⚠ Trials que vencen en los próximos 7 días</h2>
+                </div>
+                <div className="divide-y divide-yellow-500/10">
+                  {soon.map((tr) => (
+                    <div key={tr.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-white text-sm font-medium">{tr.name ?? tr.email}</p>
+                        <p className="text-yellow-400/70 text-xs">Vence: {new Date(tr.trial_ends_at!).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}</p>
+                      </div>
+                      <button
+                        onClick={() => { setTab("trainers"); setExtendTrialTarget(tr.id); setTrialDate(""); }}
+                        className="text-yellow-400 text-xs border border-yellow-500/30 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
+                      >
+                        Extender trial
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {tab === "trainers" && (
+        <div className="space-y-6">
           <div className="bg-[#1a1f2e] border border-white/10 rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-white/5">
               <h2 className="text-white font-semibold">{t("admin", "trainersHeading")}</h2>
