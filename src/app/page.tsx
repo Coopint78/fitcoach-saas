@@ -236,9 +236,13 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t py-8 text-center text-sm text-gray-500 space-y-2">
         <p>{t("landing", "footer")}</p>
-        <p>
+        <p className="flex items-center justify-center gap-4">
           <Link href="/terminos" className="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             {lang === "en" ? "Terms and Conditions" : "Términos y Condiciones"}
+          </Link>
+          <span>·</span>
+          <Link href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            {lang === "en" ? "Privacy Policy" : "Política de Privacidad"}
           </Link>
         </p>
       </footer>
