@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Zap, CheckCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useLanguage } from "@/lib/i18n/context";
@@ -26,17 +25,14 @@ export default function RegistroPage() {
       return;
     }
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name, role: "trainer" },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
     });
-    if (error) {
-      toast.error(error.message);
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.error ?? "Error al registrarse");
     } else {
       toast.success(t("auth", "confirmEmailMsg"));
       router.push("/login");
