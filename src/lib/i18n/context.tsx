@@ -13,9 +13,7 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 function detectBrowserLang(): Lang {
-  if (typeof window === "undefined") return "es";
-  const nav = navigator.language || (navigator as any).userLanguage || "es";
-  return nav.toLowerCase().startsWith("en") ? "en" : "es";
+  return "es";
 }
 
 function resolve(lang: Lang, section: string, key: string): string {
