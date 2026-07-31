@@ -35,7 +35,7 @@ export default function PrivacyPage() {
       <p>Your data is stored on secure servers. We use industry-standard encryption (TLS) for all data in transit. Passwords are never stored in plain text.</p>
 
       <h2>5. Your Rights</h2>
-      <p>You may request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="mailto:info@ledorvador.us">info@ledorvador.us</a>. To delete your account and all associated data, visit your Profile settings in the app and select "Delete account".</p>
+      <p>You may request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="mailto:info@fit-coach.vip">info@fit-coach.vip</a>. To delete your account and all associated data, visit your Profile settings in the app and select "Delete account".</p>
 
       <h2>6. Data Retention</h2>
       <p>We retain your data for as long as your account is active. After account deletion, data is removed within 30 days.</p>
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
       <p>We may update this policy. We will notify you of significant changes via email or in-app notification.</p>
 
       <h2>9. Contact</h2>
-      <p>For privacy questions, contact us at: <a href="mailto:info@ledorvador.us">info@ledorvador.us</a></p>
+      <p>For privacy questions, contact us at: <a href="mailto:info@fit-coach.vip">info@fit-coach.vip</a></p>
     </main>
   );
 }
