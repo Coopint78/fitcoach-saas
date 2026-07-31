@@ -14,6 +14,7 @@ import AssignRoutineButton from "@/components/AssignRoutineButton";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import ChatWindow from "@/components/ChatWindow";
 import ProgressTracker from "@/components/ProgressTracker";
+import ProgressPhotos from "@/components/ProgressPhotos";
 import { createClient as createSupabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
@@ -317,6 +318,18 @@ export default function ClienteDetailClient({
         </CardHeader>
         <CardContent>
           <ProgressTracker clientId={client.id} />
+        </CardContent>
+      </Card>
+
+      {/* Progress Photos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <span>📸</span> {t("clients", "progressPhotos") || "Fotos de progreso"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProgressPhotos clientId={client.id} clientName={client.name} />
         </CardContent>
       </Card>
 
