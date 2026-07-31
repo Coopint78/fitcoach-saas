@@ -11,6 +11,7 @@ export const translations = {
       subscription: "Suscripción",
       payments: "Cobros",
       profile: "Perfil",
+      guide: "Guía",
       logout: "Cerrar sesión",
     },
     auth: {
@@ -601,6 +602,7 @@ export const translations = {
       subscription: "Subscription",
       payments: "Payments",
       profile: "Profile",
+      guide: "Guide",
       logout: "Log out",
     },
     auth: {
