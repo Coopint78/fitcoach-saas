@@ -5,7 +5,7 @@ import path from "path";
 
 export const runtime = "nodejs";
 
-const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
+const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads");
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://fit-coach.vip";
 
 export async function GET(req: NextRequest) {
