@@ -510,57 +510,57 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                         <td className="px-6 py-4 text-gray-500">
                           {new Date(trainer.created_at).toLocaleDateString(lang === "en" ? "en-US" : "es-AR")}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
+                        <td className="px-3 py-3">
+                          <div className="flex flex-nowrap items-center gap-1">
                             {trainer.subscription_status !== "active" && (
                               <>
                                 <button
                                   onClick={() => handleGrantPro(trainer.id, "starter")}
                                   disabled={grantingPro === trainer.id + ":starter"}
-                                  className="text-blue-400 hover:text-blue-300 text-xs font-medium border border-blue-500/30 px-3 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                                  className="text-blue-400 hover:text-blue-300 text-[11px] font-medium border border-blue-500/30 px-2 py-1 rounded hover:bg-blue-500/10 transition-colors disabled:opacity-50 whitespace-nowrap"
                                 >
-                                  {grantingPro === trainer.id + ":starter" ? "..." : "Dar Starter gratis"}
+                                  {grantingPro === trainer.id + ":starter" ? "..." : "Starter"}
                                 </button>
                                 <button
                                   onClick={() => handleGrantPro(trainer.id, "pro")}
                                   disabled={grantingPro === trainer.id + ":pro"}
-                                  className="text-[#A3E635] hover:text-[#b5f040] text-xs font-medium border border-[#A3E635]/30 px-3 py-1.5 rounded-lg hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50"
+                                  className="text-[#A3E635] hover:text-[#b5f040] text-[11px] font-medium border border-[#A3E635]/30 px-2 py-1 rounded hover:bg-[#A3E635]/10 transition-colors disabled:opacity-50 whitespace-nowrap"
                                 >
-                                  {grantingPro === trainer.id + ":pro" ? "..." : t("admin", "grantPro")}
+                                  {grantingPro === trainer.id + ":pro" ? "..." : "Pro"}
                                 </button>
                               </>
                             )}
                             <button
                               onClick={() => { setExtendTrialTarget(trainer.id); setTrialDate(""); }}
-                              className="text-yellow-400 hover:text-yellow-300 text-xs font-medium border border-yellow-500/30 px-3 py-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
+                              className="text-yellow-400 hover:text-yellow-300 text-[11px] font-medium border border-yellow-500/30 px-2 py-1 rounded hover:bg-yellow-500/10 transition-colors whitespace-nowrap"
                             >
-                              Extender trial
+                              +Trial
                             </button>
                             {trainer.subscription_status === "active" && (
-                              <span className="text-gray-600 text-xs self-center">activo</span>
+                              <span className="text-gray-600 text-[11px]">activo</span>
                             )}
                             {/* Delete trainer */}
                             {deleteStep[trainer.id] === 1 ? (
                               <>
-                                <span className="text-red-400 text-xs font-medium self-center">¿Eliminar?</span>
+                                <span className="text-red-400 text-[11px] font-medium whitespace-nowrap">¿Seguro?</span>
                                 <button
                                   onClick={() => handleDeleteTrainer(trainer.id)}
                                   disabled={deletingId === trainer.id}
-                                  className="text-white text-xs font-bold bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                  className="text-white text-[11px] font-bold bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors disabled:opacity-50 whitespace-nowrap"
                                 >
-                                  {deletingId === trainer.id ? "..." : "Confirmar"}
+                                  {deletingId === trainer.id ? "..." : "Sí"}
                                 </button>
                                 <button
                                   onClick={() => setDeleteStep((prev) => { const next = { ...prev }; delete next[trainer.id]; return next; })}
-                                  className="text-gray-400 text-xs border border-white/20 px-3 py-1.5 rounded-lg hover:text-white transition-colors"
+                                  className="text-gray-400 text-[11px] border border-white/20 px-2 py-1 rounded hover:text-white transition-colors whitespace-nowrap"
                                 >
-                                  Cancelar
+                                  No
                                 </button>
                               </>
                             ) : (
                               <button
                                 onClick={() => setDeleteStep((prev) => ({ ...prev, [trainer.id]: 1 }))}
-                                className="text-red-400 hover:text-red-300 text-xs font-medium border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                                className="text-red-400 hover:text-red-300 text-[11px] font-medium border border-red-500/30 px-2 py-1 rounded hover:bg-red-500/10 transition-colors whitespace-nowrap"
                               >
                                 Eliminar
                               </button>
