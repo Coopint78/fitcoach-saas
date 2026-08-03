@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { transporter, FROM_EMAIL } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
@@ -13,22 +14,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Password too short" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const origin = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_APP_URL;
+  // Use admin client to create user with email already confirmed (bypasses SMTP)
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: { name, role: "trainer" },
-      emailRedirectTo: `${origin}/auth/callback`,
-    },
+    email_confirm: true,
+    user_metadata: { name, role: "trainer" },
   });
 
   if (error) {
-    console.error("Register error:", JSON.stringify(error));
-    return NextResponse.json({ error: error.message ?? error.code ?? JSON.stringify(error) }, { status: 400 });
+    console.error("Register error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    return NextResponse.json({ error: error.message || "Registration failed" }, { status: 400 });
   }
+
+  const userId = data.user?.id;
 
   // Notify admin
   const adminEmail = process.env.ADMIN_EMAIL;
