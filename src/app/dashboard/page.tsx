@@ -10,6 +10,7 @@ export default async function DashboardPage() {
 
   const { data: trainer } = await supabase.from("trainers").select("*").eq("user_id", user.id).single();
   if (!trainer) redirect("/login");
+  if (!trainer.confirmed_at) redirect("/verificar-email");
 
   const [{ count: clientCount }, { count: routineCount }, { count: exerciseCount }] = await Promise.all([
     supabase.from("clients").select("*", { count: "exact", head: true }).eq("trainer_id", trainer.id),

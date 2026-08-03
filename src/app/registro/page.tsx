@@ -35,7 +35,7 @@ export default function RegistroPage() {
       toast.error(data.error ?? "Error al registrarse");
     } else {
       toast.success(t("auth", "confirmEmailMsg"));
-      router.push("/login");
+      router.push("/verificar-email");
     }
     setLoading(false);
   }
