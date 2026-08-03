@@ -39,12 +39,9 @@ export async function POST(request: Request) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/suscripcion?success=1`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/suscripcion?canceled=1`,
       subscription_data: {
-        trial_period_days: 14,
+        trial_period_days: trainer.confirmed_at && !trainer.stripe_subscription_id ? 14 : undefined,
         metadata: { trainer_id: trainer.id },
         description: `FitCoach ${planLabel} - Plataforma para entrenadores personales`,
-      },
-      payment_intent_data: {
-        statement_descriptor_suffix: `FITCOACH ${planLabel.toUpperCase()}`,
       },
     });
 

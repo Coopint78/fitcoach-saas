@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
           'connect_account_id', t.connect_account_id,
           'connect_enabled', t.connect_enabled,
           'coaching_price_cents', t.coaching_price_cents,
+          'coaching_stripe_price_id', t.coaching_stripe_price_id,
           'name', t.name,
           'email', t.email
         ) AS trainers
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
       connect_account_id: string;
       connect_enabled: boolean;
       coaching_price_cents: number;
+      coaching_stripe_price_id: string | null;
       name: string;
       email: string;
     };
@@ -57,21 +59,30 @@ export async function POST(req: NextRequest) {
       await pool.query(`UPDATE clients SET coaching_stripe_customer_id = $1 WHERE id = $2`, [customerId, client.id]);
     }
 
-    const price = await stripe.prices.create(
-      {
-        unit_amount: trainer.coaching_price_cents,
-        currency: "usd",
-        recurring: { interval: "month" },
-        product_data: { name: `Coaching — ${trainer.name}` },
-      },
-      { stripeAccount: trainer.connect_account_id }
-    );
+    // Reuse stored price ID — create only if not set or price changed
+    let priceId = trainer.coaching_stripe_price_id as string | null;
+    if (!priceId) {
+      const price = await stripe.prices.create(
+        {
+          unit_amount: trainer.coaching_price_cents,
+          currency: "usd",
+          recurring: { interval: "month" },
+          product_data: { name: `Coaching — ${trainer.name}` },
+        },
+        { stripeAccount: trainer.connect_account_id }
+      );
+      priceId = price.id;
+      await pool.query(
+        `UPDATE trainers SET coaching_stripe_price_id = $1 WHERE connect_account_id = $2`,
+        [priceId, trainer.connect_account_id]
+      );
+    }
 
     const session = await stripe.checkout.sessions.create(
       {
         customer: customerId,
         mode: "subscription",
-        line_items: [{ price: price.id, quantity: 1 }],
+        line_items: [{ price: priceId, quantity: 1 }],
         subscription_data: { application_fee_percent: PLATFORM_FEE_PERCENT, metadata: { client_id: client.id, trainer_connect_id: trainer.connect_account_id } },
         success_url: `${appUrl}/portal?coaching_success=1`,
         cancel_url: `${appUrl}/portal?coaching_canceled=1`,

@@ -5,8 +5,7 @@ import SubscriptionView from "@/components/SubscriptionView";
 
 export default async function SuscripcionPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { rows } = await pool.query(
