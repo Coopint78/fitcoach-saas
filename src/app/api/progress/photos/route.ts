@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import pool from "@/lib/db";
 import fs from "fs/promises";
 import path from "path";
 
@@ -16,14 +17,15 @@ export async function GET(req: NextRequest) {
   const clientId = req.nextUrl.searchParams.get("client_id");
   if (!clientId) return NextResponse.json({ error: "client_id required" }, { status: 400 });
 
-  const { data, error } = await supabase
-    .from("client_photos")
-    .select("*")
-    .eq("client_id", clientId)
-    .order("taken_at", { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM client_photos WHERE client_id = $1 ORDER BY taken_at DESC`,
+      [clientId]
+    );
+    return NextResponse.json(rows);
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -31,45 +33,45 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: trainer } = await supabase.from("trainers").select("id").eq("user_id", user.id).single();
-  if (!trainer) return NextResponse.json({ error: "Trainer not found" }, { status: 403 });
+  try {
+    const { rows: trainerRows } = await pool.query(
+      `SELECT id FROM trainers WHERE user_id = $1 LIMIT 1`,
+      [user.id]
+    );
+    const trainer = trainerRows[0] ?? null;
+    if (!trainer) return NextResponse.json({ error: "Trainer not found" }, { status: 403 });
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-  const clientId = formData.get("client_id") as string | null;
-  const takenAt = formData.get("taken_at") as string | null;
-  const note = formData.get("note") as string | null;
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    const clientId = formData.get("client_id") as string | null;
+    const takenAt = formData.get("taken_at") as string | null;
+    const note = formData.get("note") as string | null;
 
-  if (!file || !clientId) return NextResponse.json({ error: "file and client_id required" }, { status: 400 });
+    if (!file || !clientId) return NextResponse.json({ error: "file and client_id required" }, { status: 400 });
 
-  const allowed = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowed.includes(file.type)) return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
-  if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Max 10 MB" }, { status: 400 });
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+    if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Max 10 MB" }, { status: 400 });
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const relativePath = `${user.id}/${clientId}/${Date.now()}.${ext}`;
-  const fullPath = path.join(UPLOADS_DIR, relativePath);
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const relativePath = `${user.id}/${clientId}/${Date.now()}.${ext}`;
+    const fullPath = path.join(UPLOADS_DIR, relativePath);
 
-  await fs.mkdir(path.dirname(fullPath), { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(fullPath, buffer);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await fs.writeFile(fullPath, buffer);
 
-  const publicUrl = `${APP_URL}/uploads/${relativePath}`;
+    const publicUrl = `${APP_URL}/uploads/${relativePath}`;
 
-  const { data, error } = await supabase.from("client_photos").insert({
-    client_id: clientId,
-    trainer_id: trainer.id,
-    url: publicUrl,
-    taken_at: takenAt || new Date().toISOString().split("T")[0],
-    note: note || null,
-    shared_with_client: false,
-  }).select().single();
-
-  if (error) {
-    await fs.unlink(fullPath).catch(() => {});
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const { rows } = await pool.query(
+      `INSERT INTO client_photos (client_id, trainer_id, url, taken_at, note, shared_with_client)
+       VALUES ($1, $2, $3, $4, $5, false) RETURNING *`,
+      [clientId, trainer.id, publicUrl, takenAt || new Date().toISOString().split("T")[0], note || null]
+    );
+    return NextResponse.json(rows[0]);
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
-  return NextResponse.json(data);
 }
 
 export async function PATCH(req: NextRequest) {
@@ -84,9 +86,16 @@ export async function PATCH(req: NextRequest) {
   if (shared_with_client !== undefined) updates.shared_with_client = shared_with_client;
   if (note !== undefined) updates.note = note;
 
-  const { error } = await supabase.from("client_photos").update(updates).eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true });
+
+  try {
+    const setClauses = Object.keys(updates).map((k, i) => `${k} = $${i + 2}`);
+    const values = [id, ...Object.values(updates)];
+    await pool.query(`UPDATE client_photos SET ${setClauses.join(", ")} WHERE id = $1`, values);
+    return NextResponse.json({ ok: true });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: NextRequest) {
@@ -97,18 +106,20 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  // Get URL before deleting row so we can remove the file
-  const { data: photo } = await supabase.from("client_photos").select("url").eq("id", id).single();
+  try {
+    const { rows } = await pool.query(`SELECT url FROM client_photos WHERE id = $1 LIMIT 1`, [id]);
+    const photo = rows[0] ?? null;
 
-  const { error } = await supabase.from("client_photos").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await pool.query(`DELETE FROM client_photos WHERE id = $1`, [id]);
 
-  // Remove file from disk (best-effort)
-  if (photo?.url) {
-    const urlPath = new URL(photo.url).pathname.replace("/uploads/", "");
-    const fullPath = path.join(UPLOADS_DIR, urlPath);
-    await fs.unlink(fullPath).catch(() => {});
+    if (photo?.url) {
+      const urlPath = new URL(photo.url).pathname.replace("/uploads/", "");
+      const fullPath = path.join(UPLOADS_DIR, urlPath);
+      await fs.unlink(fullPath).catch(() => {});
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
-
-  return NextResponse.json({ ok: true });
 }

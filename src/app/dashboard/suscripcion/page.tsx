@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import pool from "@/lib/db";
 import { redirect } from "next/navigation";
 import SubscriptionView from "@/components/SubscriptionView";
 
@@ -8,7 +9,11 @@ export default async function SuscripcionPage() {
   const user = session?.user;
   if (!user) redirect("/login");
 
-  const { data: trainer } = await supabase.from("trainers").select("*").eq("user_id", user.id).single();
+  const { rows } = await pool.query(
+    `SELECT * FROM trainers WHERE user_id = $1 LIMIT 1`,
+    [user.id]
+  );
+  const trainer = rows[0] ?? null;
   if (!trainer) redirect("/login");
 
   return (

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import pool from "@/lib/db";
 import { redirect } from "next/navigation";
 import DashboardView from "@/components/DashboardView";
 
@@ -8,15 +9,23 @@ export default async function DashboardPage() {
   const user = session?.user;
   if (!user) redirect("/login");
 
-  const { data: trainer } = await supabase.from("trainers").select("*").eq("user_id", user.id).single();
+  const { rows: trainerRows } = await pool.query(
+    `SELECT * FROM trainers WHERE user_id = $1 LIMIT 1`,
+    [user.id]
+  );
+  const trainer = trainerRows[0] ?? null;
   if (!trainer) redirect("/login");
   if (!trainer.confirmed_at) redirect("/verificar-email");
 
-  const [{ count: clientCount }, { count: routineCount }, { count: exerciseCount }] = await Promise.all([
-    supabase.from("clients").select("*", { count: "exact", head: true }).eq("trainer_id", trainer.id),
-    supabase.from("routines").select("*", { count: "exact", head: true }).eq("trainer_id", trainer.id),
-    supabase.from("exercises").select("*", { count: "exact", head: true }).eq("trainer_id", trainer.id),
+  const [clientRes, routineRes, exerciseRes] = await Promise.all([
+    pool.query(`SELECT COUNT(*) FROM clients WHERE trainer_id = $1`, [trainer.id]),
+    pool.query(`SELECT COUNT(*) FROM routines WHERE trainer_id = $1`, [trainer.id]),
+    pool.query(`SELECT COUNT(*) FROM exercises WHERE trainer_id = $1`, [trainer.id]),
   ]);
+
+  const clientCount = parseInt(clientRes.rows[0].count, 10);
+  const routineCount = parseInt(routineRes.rows[0].count, 10);
+  const exerciseCount = parseInt(exerciseRes.rows[0].count, 10);
 
   const trialEnds = trainer.trial_ends_at ? new Date(trainer.trial_ends_at) : null;
   const daysLeft = trialEnds ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86400000)) : 0;
@@ -26,9 +35,9 @@ export default async function DashboardPage() {
   return (
     <DashboardView
       firstName={firstName}
-      clientCount={clientCount ?? 0}
-      routineCount={routineCount ?? 0}
-      exerciseCount={exerciseCount ?? 0}
+      clientCount={clientCount}
+      routineCount={routineCount}
+      exerciseCount={exerciseCount}
       isTrialing={isTrialing}
       daysLeft={daysLeft}
     />

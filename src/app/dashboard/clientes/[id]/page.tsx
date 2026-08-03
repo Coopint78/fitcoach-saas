@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import pool from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import ClienteDetailClient from "@/components/ClienteDetailClient";
 
@@ -9,23 +10,39 @@ export default async function ClienteDetailPage({ params }: { params: Promise<{ 
   const user = session?.user;
   if (!user) redirect("/login");
 
-  const { data: trainer } = await supabase.from("trainers").select("id").eq("user_id", user.id).single();
+  const { rows: trainerRows } = await pool.query(
+    `SELECT id FROM trainers WHERE user_id = $1 LIMIT 1`,
+    [user.id]
+  );
+  const trainer = trainerRows[0] ?? null;
   if (!trainer) redirect("/login");
 
-  const { data: client } = await supabase
-    .from("clients")
-    .select("id, name, email, user_id, goal, notes, phone, birthdate, gender, height_cm, weight_kg, address, invite_token")
-    .eq("id", id)
-    .eq("trainer_id", trainer.id)
-    .single();
+  const { rows: clientRows } = await pool.query(
+    `SELECT id, name, email, user_id, goal, notes, phone, birthdate, gender, height_cm, weight_kg, address, invite_token
+     FROM clients
+     WHERE id = $1 AND trainer_id = $2
+     LIMIT 1`,
+    [id, trainer.id]
+  );
+  const client = clientRows[0] ?? null;
   if (!client) notFound();
 
-  const { data: assignments } = await supabase
-    .from("assignments")
-    .select("id, routine_id, routine:routines(id, name)")
-    .eq("client_id", client.id);
+  const { rows: assignmentRows } = await pool.query(
+    `SELECT a.id, a.routine_id,
+      CASE WHEN r.id IS NOT NULL
+        THEN json_build_object('id', r.id, 'name', r.name)
+        ELSE NULL
+      END AS routine
+     FROM assignments a
+     LEFT JOIN routines r ON r.id = a.routine_id
+     WHERE a.client_id = $1`,
+    [client.id]
+  );
 
-  const { data: routines } = await supabase.from("routines").select("id, name").eq("trainer_id", trainer.id);
+  const { rows: routineRows } = await pool.query(
+    `SELECT id, name FROM routines WHERE trainer_id = $1`,
+    [trainer.id]
+  );
 
   const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invitacion/${client.invite_token}`;
 
@@ -33,8 +50,8 @@ export default async function ClienteDetailPage({ params }: { params: Promise<{ 
     <ClienteDetailClient
       client={client}
       trainerId={trainer.id}
-      routines={routines ?? []}
-      assignments={(assignments ?? []).map(a => ({ ...a, routine: Array.isArray(a.routine) ? (a.routine[0] ?? null) : a.routine })) as { id: string; routine_id: string; routine: { id: string; name: string } | null }[]}
+      routines={routineRows}
+      assignments={assignmentRows as { id: string; routine_id: string; routine: { id: string; name: string } | null }[]}
       inviteLink={inviteLink}
     />
   );

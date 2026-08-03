@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle, Clock, XCircle } from "lucide-react";
+import { CheckCircle, Clock, XCircle, Trash2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 
 type Trainer = {
@@ -32,6 +32,7 @@ export default function AdminTrainerRow({ trainer }: { trainer: Trainer }) {
   const [status, setStatus] = useState(trainer.subscription_status ?? "inactive");
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [deleteStep, setDeleteStep] = useState(0); // 0=idle, 1=first confirm, 2=deleting
 
   const STATUS_OPTIONS = [
     { value: "trialing", label: t("admin", "statusTrialing") },
@@ -42,6 +43,24 @@ export default function AdminTrainerRow({ trainer }: { trainer: Trainer }) {
 
   const trialEnds = trainer.trial_ends_at ? new Date(trainer.trial_ends_at).toLocaleDateString() : null;
   const joinDate = new Date(trainer.created_at).toLocaleDateString();
+
+  async function deleteTrainer() {
+    setDeleteStep(2);
+    try {
+      const res = await fetch(`/api/admin/trainers/${trainer.id}/delete`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Error al eliminar");
+        setDeleteStep(0);
+      } else {
+        toast.success(`Entrenador ${trainer.name} eliminado`);
+        router.refresh();
+      }
+    } catch {
+      toast.error("Error de conexión");
+      setDeleteStep(0);
+    }
+  }
 
   async function saveStatus(newStatus: string) {
     setSaving(true);
@@ -94,6 +113,25 @@ export default function AdminTrainerRow({ trainer }: { trainer: Trainer }) {
             <Button size="sm" variant="ghost" onClick={() => setEditing(true)} className="h-8 rounded-lg text-xs">
               {t("admin", "edit")}
             </Button>
+            {deleteStep === 0 && (
+              <Button size="sm" variant="ghost" onClick={() => setDeleteStep(1)} className="h-8 rounded-lg text-xs text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {deleteStep === 1 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-destructive font-medium">¿Eliminar?</span>
+                <Button size="sm" variant="destructive" onClick={deleteTrainer} className="h-7 rounded-lg text-xs px-2">
+                  Confirmar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setDeleteStep(0)} className="h-7 rounded-lg text-xs px-2">
+                  Cancelar
+                </Button>
+              </div>
+            )}
+            {deleteStep === 2 && (
+              <span className="text-xs text-muted-foreground">Eliminando...</span>
+            )}
           </>
         )}
       </div>

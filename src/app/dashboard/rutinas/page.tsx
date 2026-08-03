@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import pool from "@/lib/db";
 import { redirect } from "next/navigation";
 import RutinasPageView from "@/components/RutinasPageView";
 
@@ -8,21 +9,29 @@ export default async function RutinasPage() {
   const user = session?.user;
   if (!user) redirect("/login");
 
-  const { data: trainer } = await supabase.from("trainers").select("id").eq("user_id", user.id).single();
+  const { rows: trainerRows } = await pool.query(
+    `SELECT id FROM trainers WHERE user_id = $1 LIMIT 1`,
+    [user.id]
+  );
+  const trainer = trainerRows[0] ?? null;
   if (!trainer) redirect("/login");
 
-  const { data: routines } = await supabase
-    .from("routines")
-    .select("*, routine_items(count)")
-    .eq("trainer_id", trainer.id)
-    .order("created_at", { ascending: false });
+  const { rows: routines } = await pool.query(
+    `SELECT r.id, r.name, COUNT(ri.id)::int AS item_count
+     FROM routines r
+     LEFT JOIN routine_items ri ON ri.routine_id = r.id
+     WHERE r.trainer_id = $1
+     GROUP BY r.id
+     ORDER BY r.created_at DESC`,
+    [trainer.id]
+  );
 
   return (
     <RutinasPageView
-      routines={(routines ?? []).map(r => ({
+      routines={routines.map(r => ({
         id: r.id,
         name: r.name,
-        routine_items: (r.routine_items as unknown as { count: number }[]) ?? [],
+        routine_items: [{ count: r.item_count }],
       }))}
     />
   );
