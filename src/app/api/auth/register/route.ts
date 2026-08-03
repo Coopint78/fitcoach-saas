@@ -33,6 +33,20 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = data.user?.id;
+  if (!userId) return NextResponse.json({ error: "User creation failed" }, { status: 500 });
+
+  // Create trainer row (14-day trial)
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+  const { error: trainerError } = await adminClient
+    .from("trainers")
+    .insert({ user_id: userId, name, email, trial_ends_at: trialEndsAt, subscription_status: "trialing" });
+
+  if (trainerError) {
+    console.error("Trainer row creation error:", JSON.stringify(trainerError, Object.getOwnPropertyNames(trainerError)));
+    // Roll back: delete the auth user so registration is atomic
+    await adminClient.auth.admin.deleteUser(userId);
+    return NextResponse.json({ error: "Registration failed, please try again" }, { status: 500 });
+  }
 
   // Notify admin
   const adminEmail = process.env.ADMIN_EMAIL;
