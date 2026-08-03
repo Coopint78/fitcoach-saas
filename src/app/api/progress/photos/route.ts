@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdmin } from "@supabase/supabase-js";
+import fs from "fs/promises";
+import path from "path";
 
 export const runtime = "nodejs";
 
-// GET /api/progress/photos?client_id=xxx — list photos for a client
+const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://fit-coach.vip";
+
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,7 +26,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-// POST /api/progress/photos — upload a new photo
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -44,15 +46,15 @@ export async function POST(req: NextRequest) {
   if (!allowed.includes(file.type)) return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
   if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Max 10 MB" }, { status: 400 });
 
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const filename = `${user.id}/${clientId}/${Date.now()}.${ext}`;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const relativePath = `${user.id}/${clientId}/${Date.now()}.${ext}`;
+  const fullPath = path.join(UPLOADS_DIR, relativePath);
 
-  const admin = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  await fs.mkdir(path.dirname(fullPath), { recursive: true });
   const buffer = Buffer.from(await file.arrayBuffer());
-  const { error: uploadError } = await admin.storage.from("progress-photos").upload(filename, buffer, { contentType: file.type });
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  await fs.writeFile(fullPath, buffer);
 
-  const { data: { publicUrl } } = admin.storage.from("progress-photos").getPublicUrl(filename);
+  const publicUrl = `${APP_URL}/uploads/${relativePath}`;
 
   const { data, error } = await supabase.from("client_photos").insert({
     client_id: clientId,
@@ -63,11 +65,13 @@ export async function POST(req: NextRequest) {
     shared_with_client: false,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    await fs.unlink(fullPath).catch(() => {});
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
-// PATCH /api/progress/photos — update shared_with_client or note
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -85,7 +89,6 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/progress/photos — delete a photo
 export async function DELETE(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -94,7 +97,18 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
+  // Get URL before deleting row so we can remove the file
+  const { data: photo } = await supabase.from("client_photos").select("url").eq("id", id).single();
+
   const { error } = await supabase.from("client_photos").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Remove file from disk (best-effort)
+  if (photo?.url) {
+    const urlPath = new URL(photo.url).pathname.replace("/uploads/", "");
+    const fullPath = path.join(UPLOADS_DIR, urlPath);
+    await fs.unlink(fullPath).catch(() => {});
+  }
+
   return NextResponse.json({ ok: true });
 }
