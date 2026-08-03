@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("Register error:", JSON.stringify(error));
+    return NextResponse.json({ error: error.message ?? error.code ?? JSON.stringify(error) }, { status: 400 });
   }
 
   // Notify admin
