@@ -77,6 +77,8 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const [adminUsers, setAdminUsers] = useState(initialAdminUsers);
   const [clients] = useState(initialClients);
   const [grantingPro, setGrantingPro] = useState<string | null>(null);
+  const [deleteStep, setDeleteStep] = useState<Record<string, number>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [sortKey, setSortKey] = useState<SortKey>("expiry");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -140,6 +142,23 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
   const paidTrainers = trainers.filter((tr) => tr.subscription_status === "active" && !tr.is_pro_free);
   const mrr = paidTrainers.length * 29;
   const commission = mrr * 0.05;
+
+  async function handleDeleteTrainer(trainerId: string) {
+    setDeletingId(trainerId);
+    try {
+      const res = await fetch(`/api/admin/trainers/${trainerId}/delete`, { method: "DELETE" });
+      if (res.ok) {
+        setTrainers((prev) => prev.filter((tr) => tr.id !== trainerId));
+      } else {
+        const data = await res.json();
+        alert(data.error ?? "Error al eliminar");
+      }
+    } catch {
+      alert("Error de conexión");
+    }
+    setDeletingId(null);
+    setDeleteStep((prev) => { const next = { ...prev }; delete next[trainerId]; return next; });
+  }
 
   async function handleGrantPro(trainerId: string, plan: "starter" | "pro" = "pro") {
     setGrantingPro(trainerId + ":" + plan);
@@ -519,6 +538,32 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                             </button>
                             {trainer.subscription_status === "active" && (
                               <span className="text-gray-600 text-xs self-center">activo</span>
+                            )}
+                            {/* Delete trainer */}
+                            {deleteStep[trainer.id] === 1 ? (
+                              <>
+                                <span className="text-red-400 text-xs font-medium self-center">¿Eliminar?</span>
+                                <button
+                                  onClick={() => handleDeleteTrainer(trainer.id)}
+                                  disabled={deletingId === trainer.id}
+                                  className="text-white text-xs font-bold bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {deletingId === trainer.id ? "..." : "Confirmar"}
+                                </button>
+                                <button
+                                  onClick={() => setDeleteStep((prev) => { const next = { ...prev }; delete next[trainer.id]; return next; })}
+                                  className="text-gray-400 text-xs border border-white/20 px-3 py-1.5 rounded-lg hover:text-white transition-colors"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => setDeleteStep((prev) => ({ ...prev, [trainer.id]: 1 }))}
+                                className="text-red-400 hover:text-red-300 text-xs font-medium border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                              >
+                                Eliminar
+                              </button>
                             )}
                           </div>
                         </td>
