@@ -35,15 +35,17 @@ export async function POST(req: NextRequest) {
   const userId = data.user?.id;
   if (!userId) return NextResponse.json({ error: "User creation failed" }, { status: 500 });
 
-  // Create trainer row (14-day trial)
+  // Ensure trainer row exists (a DB trigger may already create it; upsert to also set trial fields)
   const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
   const { error: trainerError } = await adminClient
     .from("trainers")
-    .insert({ user_id: userId, name, email, trial_ends_at: trialEndsAt, subscription_status: "trialing" });
+    .upsert(
+      { user_id: userId, name, email, trial_ends_at: trialEndsAt, subscription_status: "trialing" },
+      { onConflict: "user_id" }
+    );
 
   if (trainerError) {
-    console.error("Trainer row creation error:", JSON.stringify(trainerError, Object.getOwnPropertyNames(trainerError)));
-    // Roll back: delete the auth user so registration is atomic
+    console.error("Trainer row error:", JSON.stringify(trainerError, Object.getOwnPropertyNames(trainerError)));
     await adminClient.auth.admin.deleteUser(userId);
     return NextResponse.json({ error: "Registration failed, please try again" }, { status: 500 });
   }
