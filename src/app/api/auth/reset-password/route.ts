@@ -9,7 +9,14 @@ const supabaseAdmin = createClient(
 export async function POST(request: NextRequest) {
   const { token, password } = await request.json();
   if (!token || !password) return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
-  if (password.length < 6) return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+
+  // Password must be 12+ chars, 1 uppercase, 1 number, 1 special char
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+  if (!passwordRegex.test(password)) {
+    return NextResponse.json({
+      error: "La contraseña debe tener 12+ caracteres con mayúscula, número y carácter especial (@$!%*?&)"
+    }, { status: 400 });
+  }
 
   // Find token
   const { data: resetToken, error } = await supabaseAdmin

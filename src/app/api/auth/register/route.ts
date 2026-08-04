@@ -10,8 +10,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  if (password.length < 6) {
-    return NextResponse.json({ error: "Password too short" }, { status: 400 });
+  // Password must be 12+ chars, 1 uppercase, 1 number, 1 special char
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+  if (!passwordRegex.test(password)) {
+    return NextResponse.json({
+      error: "Password must be 12+ characters with uppercase letter, number, and special character (@$!%*?&)"
+    }, { status: 400 });
   }
 
   // Use admin client to create user with email already confirmed (bypasses SMTP)
