@@ -466,6 +466,7 @@ function RoutinesSection({
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2">
@@ -482,7 +483,6 @@ function RoutinesSection({
             {assignments.map((a) => {
               const isOpen = !!expanded[a.id];
               const items = (a.items ?? []).sort((x, y) => x.order - y.order);
-              const step = unassignStep[a.id] ?? 0;
               return (
                 <div key={a.id} className="border border-gray-200 rounded-xl overflow-hidden">
                   {/* Routine header row */}
@@ -574,6 +574,7 @@ function RoutinesSection({
         </div>
       </div>
     )}
+    </>
   );
 }
 
