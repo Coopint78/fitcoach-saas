@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme/context";
+import { detectInitialLanguage } from "@/lib/i18n/server";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,9 +39,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const initialLang = await detectInitialLanguage();
+
   return (
-    <html lang="es" className="h-full" suppressHydrationWarning>
+    <html lang={initialLang} className="h-full" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -50,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.variable} font-sans min-h-full`}>
         <ThemeProvider>
-          <LanguageProvider>
+          <LanguageProvider initialLang={initialLang}>
             {children}
             <Toaster richColors position="top-right" />
           </LanguageProvider>

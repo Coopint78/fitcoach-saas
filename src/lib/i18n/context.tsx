@@ -23,16 +23,25 @@ function resolve(lang: Lang, section: string, key: string): string {
   return sec?.[key] ?? (translations.es as any)[section]?.[key] ?? key;
 }
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("es");
+export function LanguageProvider({ children, initialLang = "es" }: { children: React.ReactNode; initialLang?: Lang }) {
+  const [lang, setLangState] = useState<Lang>(initialLang);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem("fitcoach-lang") as Lang | null;
     const explicit = localStorage.getItem("fitcoach-lang-explicit");
     // Only honour stored value if the user explicitly chose it via the toggle.
     // Otherwise always use browser language so EN browsers get EN interface.
-    setLangState(stored && explicit === "true" ? stored : detectBrowserLang());
-  }, []);
+    if (stored && explicit === "true") {
+      setLangState(stored);
+    } else {
+      const browserLang = detectBrowserLang();
+      if (browserLang !== lang) {
+        setLangState(browserLang);
+      }
+    }
+  }, [lang]);
 
   function setLang(l: Lang) {
     setLangState(l);

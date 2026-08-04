@@ -87,7 +87,7 @@ function SortableItem({
           {...listeners}
           className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground touch-none"
           type="button"
-          aria-label="Reordenar"
+          aria-label={t("routines", "reorder")}
         >
           <GripVertical className="h-4 w-4" />
         </button>
@@ -106,7 +106,7 @@ function SortableItem({
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
             onClick={() => setEditingNotes(v => !v)}
-            title="Notas para el cliente"
+            title={t("routines", "coachNotesTitle")}
             type="button"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ function SortableItem({
       {/* Coach notes display */}
       {!editingNotes && item.coach_notes && (
         <div className="ml-11 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-800 rounded-lg px-3 py-2">
-          <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wide mb-0.5">Notas para el cliente</p>
+          <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wide mb-0.5">{t("routines", "coachNotesTitle")}</p>
           <p className="text-xs text-indigo-700 dark:text-indigo-300">{item.coach_notes}</p>
         </div>
       )}
@@ -137,15 +137,15 @@ function SortableItem({
           <Textarea
             value={notesValue}
             onChange={e => setNotesValue(e.target.value)}
-            placeholder="Indicaciones, técnica, advertencias para el cliente..."
+            placeholder={t("routines", "coachNotesPlaceholder")}
             className="text-xs rounded-xl resize-none min-h-[72px]"
           />
           <div className="flex gap-2">
             <Button size="sm" className="h-7 gap-1 rounded-lg text-xs" onClick={saveNotes} disabled={savingNotes}>
-              <Check className="h-3 w-3" /> {savingNotes ? "Guardando..." : "Guardar"}
+              <Check className="h-3 w-3" /> {savingNotes ? t("common", "saving") : t("common", "save")}
             </Button>
             <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-lg text-xs" onClick={() => { setEditingNotes(false); setNotesValue(item.coach_notes ?? ""); }}>
-              <X className="h-3 w-3" /> Cancelar
+              <X className="h-3 w-3" /> {t("common", "cancel")}
             </Button>
           </div>
         </div>

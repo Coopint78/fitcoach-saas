@@ -6,12 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Plus, X, Clock } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/context";
 
-const DAY_LABELS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const DAY_LABELS_ES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const DAY_LABELS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 type Slot = { day_of_week: number; start_time: string; end_time: string };
 
 export default function AvailabilityEditor() {
+  const { t, lang } = useLanguage();
+  const DAY_LABELS = lang === "en" ? DAY_LABELS_EN : DAY_LABELS_ES;
   const [slots, setSlots] = useState<Slot[]>([]);
   const [duration, setDuration] = useState(60);
   const [loading, setLoading] = useState(true);
@@ -44,8 +48,8 @@ export default function AvailabilityEditor() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slots, session_duration_minutes: duration }),
     });
-    if (res.ok) toast.success("Disponibilidad guardada");
-    else toast.error("Error al guardar");
+    if (res.ok) toast.success(lang === "es" ? "Disponibilidad guardada" : "Availability saved");
+    else toast.error(lang === "es" ? "Error al guardar" : "Error saving");
     setSaving(false);
   }
 
@@ -103,7 +107,7 @@ export default function AvailabilityEditor() {
       </Card>
 
       <Button onClick={save} disabled={saving} className="w-full sm:w-auto">
-        {saving ? "Guardando..." : "Guardar disponibilidad"}
+        {saving ? t("common", "saving") : t("routines", "saveAvailability")}
       </Button>
     </div>
   );

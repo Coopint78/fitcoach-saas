@@ -700,13 +700,13 @@ export default function AdminDashboard({ trainers: initialTrainers, totalTrainer
                 disabled={extendingTrial || !trialDate}
                 className="flex-1 bg-[#A3E635] text-[#111827] text-sm font-bold px-4 py-2 rounded-lg hover:bg-[#b5f040] transition-colors disabled:opacity-50"
               >
-                {extendingTrial ? "Guardando..." : "Guardar"}
+                {extendingTrial ? t("common", "saving") : t("common", "save")}
               </button>
               <button
                 onClick={() => { setExtendTrialTarget(null); setTrialDate(""); }}
                 className="flex-1 text-gray-300 text-sm border border-white/20 px-4 py-2 rounded-lg hover:text-white transition-colors"
               >
-                Cancelar
+                {t("common", "cancel")}
               </button>
             </div>
           </div>

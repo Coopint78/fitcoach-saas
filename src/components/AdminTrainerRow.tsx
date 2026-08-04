@@ -120,17 +120,17 @@ export default function AdminTrainerRow({ trainer }: { trainer: Trainer }) {
             )}
             {deleteStep === 1 && (
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-destructive font-medium">¿Eliminar?</span>
+                <span className="text-xs text-destructive font-medium">{t("admin", "deleteConfirm")}</span>
                 <Button size="sm" variant="destructive" onClick={deleteTrainer} className="h-7 rounded-lg text-xs px-2">
-                  Confirmar
+                  {t("common", "confirm")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setDeleteStep(0)} className="h-7 rounded-lg text-xs px-2">
-                  Cancelar
+                  {t("common", "cancel")}
                 </Button>
               </div>
             )}
             {deleteStep === 2 && (
-              <span className="text-xs text-muted-foreground">Eliminando...</span>
+              <span className="text-xs text-muted-foreground">{t("common", "deleting")}</span>
             )}
           </>
         )}
