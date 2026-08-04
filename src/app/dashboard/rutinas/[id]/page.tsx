@@ -376,7 +376,7 @@ export default function RutinaEditorPage() {
                         className="pl-9 rounded-xl h-10"
                       />
                     </div>
-                    <div className="max-h-52 overflow-y-auto rounded-xl border border-border divide-y divide-border">
+                    <div className="max-h-52 overflow-y-auto overflow-x-hidden rounded-xl border border-border divide-y divide-border">
                       {filteredLibrary.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-6">{t("exercises", "noResults")}</p>
                       ) : (
