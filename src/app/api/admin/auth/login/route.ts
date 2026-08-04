@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 
 const ADMIN_JWT_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET ?? "fitcoach-admin-secret-2026"
+  process.env.ADMIN_JWT_SECRET || (() => { throw new Error("ADMIN_JWT_SECRET not configured"); })()
 );
 
 function adminSupabase() {

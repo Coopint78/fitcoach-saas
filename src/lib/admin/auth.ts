@@ -2,7 +2,7 @@ import { jwtVerify } from "jose";
 import { NextRequest } from "next/server";
 
 const ADMIN_JWT_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET ?? "fitcoach-admin-secret-2026"
+  process.env.ADMIN_JWT_SECRET || (() => { throw new Error("ADMIN_JWT_SECRET not configured"); })()
 );
 
 export interface AdminJWTPayload {
