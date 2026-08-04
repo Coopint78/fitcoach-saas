@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import pool from "@/lib/db";
 import { redirect } from "next/navigation";
 import PortalView from "@/components/PortalView";
 
@@ -26,7 +27,29 @@ export default async function PortalPage() {
     supabase.from("sessions").select("*").eq("client_id", client.id).gte("scheduled_at", new Date().toISOString()).order("scheduled_at", { ascending: true }).limit(10),
   ]);
 
-  const completedIds = (logsRes.data ?? []).filter(l => l.completed).map(l => l.exercise_id);
+  // Fetch per-client coach notes
+  let coachNotesMap: Record<string, string> = {};
+  try {
+    const { rows } = await pool.query(
+      `SELECT routine_item_id, notes FROM routine_item_notes WHERE client_id = $1`,
+      [client.id]
+    );
+    rows.forEach((r: any) => { coachNotesMap[r.routine_item_id] = r.notes; });
+  } catch { /* table may not exist yet */ }
+
+  // Inject notes into routine_items
+  const assignments = (assignmentsRes.data ?? []).map((a: any) => ({
+    ...a,
+    routine: a.routine ? {
+      ...a.routine,
+      routine_items: (a.routine.routine_items ?? []).map((ri: any) => ({
+        ...ri,
+        coach_notes: coachNotesMap[ri.id] ?? null,
+      })),
+    } : null,
+  }));
+
+  const completedIds = (logsRes.data ?? []).filter((l: any) => l.completed).map((l: any) => l.exercise_id);
 
   return (
     <PortalView
@@ -35,7 +58,7 @@ export default async function PortalPage() {
       trainerId={trainer?.id ?? ""}
       trainerName={trainer?.name ?? ""}
       clientGoal={client.goal ?? null}
-      assignments={(assignmentsRes.data ?? []) as any}
+      assignments={assignments as any}
       completedExerciseIds={completedIds}
       coachingStatus={client.coaching_subscription_status ?? null}
       coachingPriceCents={trainer?.coaching_price_cents ?? 0}

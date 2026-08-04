@@ -67,6 +67,7 @@ export interface RoutineItem {
   sets: number;
   reps: string;
   order: number;
+  coach_notes?: string | null;
   exercise?: Exercise;
 }
 

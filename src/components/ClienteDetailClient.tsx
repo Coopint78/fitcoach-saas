@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Mail, Target, FileText, ClipboardList, Phone, MapPin, Ruler, Weight, Calendar, Pencil, X, Check } from "lucide-react";
+import { ArrowLeft, Mail, Target, FileText, ClipboardList, Phone, MapPin, Ruler, Weight, Calendar, Pencil, X, Check, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import AssignRoutineButton from "@/components/AssignRoutineButton";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import ChatWindow from "@/components/ChatWindow";
@@ -28,7 +28,16 @@ type Client = {
   invite_token?: string | null;
 };
 type Routine = { id: string; name: string };
-type Assignment = { id: string; routine_id: string; routine: { id: string; name: string } | null };
+type RoutineExercise = {
+  id: string; exercise_id: string; sets: number; reps: string; order: number;
+  coach_notes: string | null;
+  exercise: { id: string; name: string; name_es?: string | null; name_en?: string | null; is_system?: boolean };
+};
+type Assignment = {
+  id: string; routine_id: string;
+  routine: { id: string; name: string } | null;
+  items?: RoutineExercise[];
+};
 
 function calcAge(birthdate: string): number {
   const birth = new Date(birthdate);
@@ -347,36 +356,207 @@ export default function ClienteDetailClient({
         </Card>
       )}
 
-      {/* Routines */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-indigo-600" />
-            {t("clients", "assignedRoutines")}
-          </CardTitle>
-          <AssignRoutineButton clientId={client.id} routines={routines} existingAssignments={assignments.map(a => a.routine_id)} />
-        </CardHeader>
-        <CardContent>
-          {assignments.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-6">{t("clients", "noRoutines")}</p>
-          ) : (
-            <div className="space-y-2">
-              {assignments.map((a) => (
-                <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-indigo-500" />
-                    <span className="font-medium text-sm">{a.routine?.name}</span>
-                  </div>
-                  <Link href={`/dashboard/rutinas/${a.routine?.id}`}>
-                    <Button variant="ghost" size="sm" className="text-xs">{t("clients", "viewRoutine")}</Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Routines with per-client coach notes */}
+      <RoutinesSection client={client} routines={routines} assignments={assignments} lang={lang} t={t} />
     </div>
+  );
+}
+
+function exDisplayName(ex: RoutineExercise["exercise"], lang: string): string {
+  if (lang === "en") return ex.name_en ?? ex.name;
+  return ex.name_es ?? ex.name;
+}
+
+function RoutineNoteEditor({
+  item, clientId, lang,
+}: {
+  item: RoutineExercise; clientId: string; lang: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(item.coach_notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    const res = await fetch(`/api/clients/${clientId}/exercise-notes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ routine_item_id: item.id, notes: value }),
+    });
+    if (res.ok) {
+      setEditing(false);
+      item.coach_notes = value || null;
+    } else {
+      toast.error("Error al guardar la nota");
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {!editing ? (
+        <button
+          onClick={() => setEditing(true)}
+          className={`w-full text-left flex items-start gap-2 px-3 py-2 rounded-lg border text-xs transition-colors ${
+            item.coach_notes
+              ? "bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100"
+              : "bg-gray-50 border-dashed border-gray-200 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          }`}
+        >
+          <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>{item.coach_notes || (lang === "en" ? "Add note for this client..." : "Agregar nota para este cliente...")}</span>
+          <Pencil className="h-3 w-3 ml-auto shrink-0 mt-0.5 opacity-50" />
+        </button>
+      ) : (
+        <div className="space-y-1.5">
+          <Textarea
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            placeholder={lang === "en" ? "Technique tips, reps adjustment, warnings..." : "Técnica, ajuste de reps, advertencias..."}
+            className="text-xs rounded-xl resize-none min-h-[64px]"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <Button size="sm" className="h-7 gap-1 rounded-lg text-xs bg-indigo-600 hover:bg-indigo-700" onClick={save} disabled={saving}>
+              <Check className="h-3 w-3" /> {saving ? "..." : (lang === "en" ? "Save" : "Guardar")}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-lg text-xs" onClick={() => { setEditing(false); setValue(item.coach_notes ?? ""); }}>
+              <X className="h-3 w-3" /> {lang === "en" ? "Cancel" : "Cancelar"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RoutinesSection({
+  client, routines, assignments: initialAssignments, lang, t,
+}: {
+  client: Client;
+  routines: Routine[];
+  assignments: Assignment[];
+  lang: string;
+  t: (s: string, k: string) => string;
+}) {
+  const router = useRouter();
+  const [assignments, setAssignments] = useState(initialAssignments);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [unassignStep, setUnassignStep] = useState<Record<string, number>>({});
+
+  function toggle(id: string) {
+    setExpanded(p => ({ ...p, [id]: !p[id] }));
+  }
+
+  async function handleUnassign(assignmentId: string, routineName: string) {
+    setUnassignStep(p => ({ ...p, [assignmentId]: 2 }));
+    const res = await fetch(`/api/assignments/${assignmentId}`, { method: "DELETE" });
+    if (res.ok) {
+      setAssignments(prev => prev.filter(a => a.id !== assignmentId));
+      toast.success(`Rutina "${routineName}" desasignada`);
+      router.refresh();
+    } else {
+      toast.error("Error al desasignar la rutina");
+      setUnassignStep(p => ({ ...p, [assignmentId]: 0 }));
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-indigo-600" />
+          {t("clients", "assignedRoutines")}
+        </CardTitle>
+        <AssignRoutineButton clientId={client.id} routines={routines} existingAssignments={assignments.map(a => a.routine_id)} />
+      </CardHeader>
+      <CardContent>
+        {assignments.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">{t("clients", "noRoutines")}</p>
+        ) : (
+          <div className="space-y-3">
+            {assignments.map((a) => {
+              const isOpen = !!expanded[a.id];
+              const items = (a.items ?? []).sort((x, y) => x.order - y.order);
+              const step = unassignStep[a.id] ?? 0;
+              return (
+                <div key={a.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                  {/* Routine header row */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-50">
+                    <button
+                      onClick={() => toggle(a.id)}
+                      className="flex items-center gap-2 flex-1 text-left min-w-0"
+                    >
+                      <ClipboardList className="h-4 w-4 text-indigo-500 shrink-0" />
+                      <span className="font-medium text-sm truncate">{a.routine?.name}</span>
+                      {items.length > 0 && (
+                        <span className="text-xs text-gray-400 shrink-0">({items.length})</span>
+                      )}
+                      {isOpen
+                        ? <ChevronUp className="h-4 w-4 text-gray-400 ml-auto shrink-0" />
+                        : <ChevronDown className="h-4 w-4 text-gray-400 ml-auto shrink-0" />}
+                    </button>
+                    <Link href={`/dashboard/rutinas/${a.routine?.id}`}>
+                      <Button variant="ghost" size="sm" className="text-xs h-7 shrink-0">{t("clients", "viewRoutine")}</Button>
+                    </Link>
+                    {/* Unassign with double confirm */}
+                    {step === 1 ? (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          size="sm" variant="destructive"
+                          className="h-7 px-2 text-xs rounded-lg"
+                          onClick={() => handleUnassign(a.id, a.routine?.name ?? "")}
+                        >Sí, quitar</Button>
+                        <Button
+                          size="sm" variant="ghost"
+                          className="h-7 px-2 text-xs rounded-lg"
+                          onClick={() => setUnassignStep(p => ({ ...p, [a.id]: 0 }))}
+                        >No</Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost" size="sm"
+                        className="h-7 w-7 p-0 text-gray-400 hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
+                        title="Desasignar rutina"
+                        onClick={() => setUnassignStep(p => ({ ...p, [a.id]: 1 }))}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Exercises + notes (expanded) */}
+                  {isOpen && (
+                    items.length === 0 ? (
+                      <div className="px-4 py-4 text-center text-xs text-gray-400">
+                        {lang === "en" ? "No exercises in this routine." : "Esta rutina no tiene ejercicios."}
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {items.map((item, idx) => (
+                          <div key={item.id} className="px-4 py-3 space-y-2">
+                            <div className="flex items-start gap-2">
+                              <span className="text-xs font-bold text-gray-400 w-5 shrink-0 mt-0.5">{idx + 1}</span>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm">{exDisplayName(item.exercise, lang)}</p>
+                                <p className="text-xs text-gray-500">{item.sets} series × {item.reps}</p>
+                              </div>
+                            </div>
+                            <div className="pl-7">
+                              <RoutineNoteEditor item={item} clientId={client.id} lang={lang} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

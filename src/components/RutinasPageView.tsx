@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, ClipboardList, ChevronRight, Copy } from "lucide-react";
+import { Plus, ClipboardList, ChevronRight, Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
 
@@ -19,12 +19,32 @@ type Routine = {
   routine_items: { count: number }[];
 };
 
-export default function RutinasPageView({ routines }: { routines: Routine[] }) {
+export default function RutinasPageView({ routines: initialRoutines }: { routines: Routine[] }) {
   const { t } = useLanguage();
   const router = useRouter();
+  const [routines, setRoutines] = useState(initialRoutines);
   const [duplicateTarget, setDuplicateTarget] = useState<Routine | null>(null);
   const [newName, setNewName] = useState("");
   const [duplicating, setDuplicating] = useState(false);
+  // deleteStep: 0 = idle, 1 = confirm pending, 2 = deleting
+  const [deleteStep, setDeleteStep] = useState<Record<string, number>>({});
+
+  async function handleDelete(r: Routine) {
+    setDeleteStep(p => ({ ...p, [r.id]: 2 }));
+    const res = await fetch(`/api/routines/${r.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setRoutines(prev => prev.filter(x => x.id !== r.id));
+      toast.success(`Rutina "${r.name}" eliminada`);
+    } else {
+      const data = await res.json();
+      if (data.error === "assigned") {
+        toast.error("No se puede eliminar: esta rutina está asignada a uno o más clientes.");
+      } else {
+        toast.error("Error al eliminar la rutina");
+      }
+      setDeleteStep(p => ({ ...p, [r.id]: 0 }));
+    }
+  }
 
   async function handleDuplicate() {
     if (!duplicateTarget) return;
@@ -85,15 +105,48 @@ export default function RutinasPageView({ routines }: { routines: Routine[] }) {
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                   </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 shrink-0 opacity-0 group-hover:opacity-100 rounded-lg"
-                    title={t("routines", "duplicateBtnTitle")}
-                    onClick={e => { e.preventDefault(); setDuplicateTarget(r); setNewName(`${r.name} ${t("routines", "copyNameSuffix")}`); }}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 rounded-lg"
+                      title={t("routines", "duplicateBtnTitle")}
+                      onClick={e => { e.preventDefault(); setDuplicateTarget(r); setNewName(`${r.name} ${t("routines", "copyNameSuffix")}`); }}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    {deleteStep[r.id] === 1 ? (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-7 px-2 text-xs rounded-lg"
+                          disabled={deleteStep[r.id] === 2}
+                          onClick={e => { e.preventDefault(); handleDelete(r); }}
+                        >
+                          Sí, borrar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs rounded-lg"
+                          onClick={e => { e.preventDefault(); setDeleteStep(p => ({ ...p, [r.id]: 0 })); }}
+                        >
+                          No
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        title="Eliminar rutina"
+                        onClick={e => { e.preventDefault(); setDeleteStep(p => ({ ...p, [r.id]: 1 })); }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );

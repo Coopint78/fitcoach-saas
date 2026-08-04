@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, GripVertical, Trash2, ClipboardList, Search, BookOpen, Layers } from "lucide-react";
+import { ArrowLeft, Plus, GripVertical, Trash2, ClipboardList, Search, BookOpen, Layers, Pencil, Check, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Exercise, RoutineItem } from "@/types/database";
@@ -45,15 +46,20 @@ function SortableItem({
   lang,
   t,
   onRemove,
+  onSaveNotes,
 }: {
   item: RoutineItem & { exercise: Exercise };
   idx: number;
   lang: string;
   t: (ns: string, key: string) => string;
   onRemove: (id: string) => void;
+  onSaveNotes: (id: string, notes: string) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id });
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState(item.coach_notes ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -62,38 +68,88 @@ function SortableItem({
     zIndex: isDragging ? 10 : undefined,
   };
 
+  async function saveNotes() {
+    setSavingNotes(true);
+    await onSaveNotes(item.id, notesValue);
+    setSavingNotes(false);
+    setEditingNotes(false);
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3.5 bg-muted/50 rounded-xl group"
+      className="flex flex-col gap-2 p-3.5 bg-muted/50 rounded-xl group"
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground touch-none"
-        type="button"
-        aria-label="Reordenar"
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
-      <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{idx + 1}</span>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm">
-          {item.exercise?.is_system ? exName(item.exercise, lang) : item.exercise?.name}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {item.sets} {t("routines", "setsX")} {item.reps}
-        </p>
+      <div className="flex items-center gap-3">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground touch-none"
+          type="button"
+          aria-label="Reordenar"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{idx + 1}</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm">
+            {item.exercise?.is_system ? exName(item.exercise, lang) : item.exercise?.name}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {item.sets} {t("routines", "setsX")} {item.reps}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
+            onClick={() => setEditingNotes(v => !v)}
+            title="Notas para el cliente"
+            type="button"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10 rounded-lg"
+            onClick={() => onRemove(item.id)}
+            type="button"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 rounded-lg"
-        onClick={() => onRemove(item.id)}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
+
+      {/* Coach notes display */}
+      {!editingNotes && item.coach_notes && (
+        <div className="ml-11 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-800 rounded-lg px-3 py-2">
+          <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wide mb-0.5">Notas para el cliente</p>
+          <p className="text-xs text-indigo-700 dark:text-indigo-300">{item.coach_notes}</p>
+        </div>
+      )}
+
+      {/* Coach notes editor */}
+      {editingNotes && (
+        <div className="ml-11 space-y-2">
+          <Textarea
+            value={notesValue}
+            onChange={e => setNotesValue(e.target.value)}
+            placeholder="Indicaciones, técnica, advertencias para el cliente..."
+            className="text-xs rounded-xl resize-none min-h-[72px]"
+          />
+          <div className="flex gap-2">
+            <Button size="sm" className="h-7 gap-1 rounded-lg text-xs" onClick={saveNotes} disabled={savingNotes}>
+              <Check className="h-3 w-3" /> {savingNotes ? "Guardando..." : "Guardar"}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-lg text-xs" onClick={() => { setEditingNotes(false); setNotesValue(item.coach_notes ?? ""); }}>
+              <X className="h-3 w-3" /> Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -188,6 +244,12 @@ export default function RutinaEditorPage() {
     const supabase = createClient();
     await supabase.from("routine_items").delete().eq("id", itemId);
     load();
+  }
+
+  async function saveNotes(itemId: string, notes: string) {
+    const supabase = createClient();
+    await supabase.from("routine_items").update({ coach_notes: notes || null }).eq("id", itemId);
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, coach_notes: notes || null } : i));
   }
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -365,6 +427,7 @@ export default function RutinaEditorPage() {
                       lang={lang}
                       t={t}
                       onRemove={removeItem}
+                      onSaveNotes={saveNotes}
                     />
                   ))}
                 </div>
