@@ -220,30 +220,48 @@ export default function RutinaEditorPage() {
   }
 
   async function addItem() {
-    if (!form.exercise_id) return;
+    if (!form.exercise_id || !selectedEx) return;
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.from("routine_items").insert({
-      routine_id: id,
-      exercise_id: form.exercise_id,
-      sets: parseInt(form.sets) || 3,
-      reps: form.reps || "10",
-      order: items.length,
-    });
-    if (error) toast.error(t("routines", "errorAdd"));
-    else {
+    const { data: inserted, error } = await supabase
+      .from("routine_items")
+      .insert({
+        routine_id: id,
+        exercise_id: form.exercise_id,
+        sets: parseInt(form.sets) || 3,
+        reps: form.reps || "10",
+        order: items.length,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      toast.error(t("routines", "errorAdd"));
+    } else {
       toast.success(t("routines", "exerciseAdded"));
+      // Optimistic: append using the exercise already in state, avoiding RLS join issues
+      setItems(prev => [
+        ...prev,
+        {
+          id: inserted.id,
+          routine_id: id,
+          exercise_id: form.exercise_id,
+          sets: parseInt(form.sets) || 3,
+          reps: form.reps || "10",
+          order: prev.length,
+          coach_notes: null,
+          exercise: selectedEx,
+        },
+      ]);
       setOpen(false);
       resetDialog();
-      load();
     }
     setLoading(false);
   }
 
   async function removeItem(itemId: string) {
+    setItems(prev => prev.filter(i => i.id !== itemId));
     const supabase = createClient();
     await supabase.from("routine_items").delete().eq("id", itemId);
-    load();
   }
 
   async function saveNotes(itemId: string, notes: string) {

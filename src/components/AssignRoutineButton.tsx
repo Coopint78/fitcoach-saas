@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
 
@@ -30,9 +29,12 @@ export default function AssignRoutineButton({
   async function assign() {
     if (!selected) return;
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.from("assignments").insert({ routine_id: selected, client_id: clientId });
-    if (error) {
+    const res = await fetch("/api/assignments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ routine_id: selected, client_id: clientId }),
+    });
+    if (!res.ok) {
       toast.error(t("clients", "errorAssign"));
     } else {
       toast.success(t("clients", "routineAssigned"));
