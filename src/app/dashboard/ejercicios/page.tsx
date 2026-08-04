@@ -40,6 +40,7 @@ function LibraryCard({ ex, lang, t, routines, trainerId }: {
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [routineId, setRoutineId] = useState("");
+  const [routineName, setRoutineName] = useState("");
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("10");
   const [saving, setSaving] = useState(false);
@@ -82,6 +83,7 @@ function LibraryCard({ ex, lang, t, routines, trainerId }: {
     toast.success(t("exercises", "addedToRoutine"));
     setAddOpen(false);
     setRoutineId("");
+    setRoutineName("");
     setSets("3");
     setReps("10");
   }
@@ -141,9 +143,9 @@ function LibraryCard({ ex, lang, t, routines, trainerId }: {
                   <>
                     <div className="space-y-1.5">
                       <Label>{t("exercises", "selectRoutine")}</Label>
-                      <Select value={routineId} onValueChange={v => setRoutineId(v ?? "")}>
+                      <Select value={routineId} onValueChange={v => { setRoutineId(v ?? ""); setRoutineName(routines.find(r => r.id === v)?.name ?? ""); }}>
                         <SelectTrigger className="rounded-xl h-11">
-                          <SelectValue placeholder={t("exercises", "selectRoutine")} />
+                          <SelectValue placeholder={t("exercises", "selectRoutine")}>{routineName || undefined}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {routines.map(r => (
