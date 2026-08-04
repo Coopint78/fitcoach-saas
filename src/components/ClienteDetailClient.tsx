@@ -443,22 +443,25 @@ function RoutinesSection({
   const router = useRouter();
   const [assignments, setAssignments] = useState(initialAssignments);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [unassignStep, setUnassignStep] = useState<Record<string, number>>({});
+  const [unassignDialog, setUnassignDialog] = useState<{ assignmentId: string; routineName: string } | null>(null);
+  const [isUnassigning, setIsUnassigning] = useState(false);
 
   function toggle(id: string) {
     setExpanded(p => ({ ...p, [id]: !p[id] }));
   }
 
-  async function handleUnassign(assignmentId: string, routineName: string) {
-    setUnassignStep(p => ({ ...p, [assignmentId]: 2 }));
-    const res = await fetch(`/api/assignments/${assignmentId}`, { method: "DELETE" });
+  async function handleConfirmUnassign() {
+    if (!unassignDialog) return;
+    setIsUnassigning(true);
+    const res = await fetch(`/api/assignments/${unassignDialog.assignmentId}`, { method: "DELETE" });
     if (res.ok) {
-      setAssignments(prev => prev.filter(a => a.id !== assignmentId));
-      toast.success(t("clients", "routineUnassigned").replace("{name}", routineName));
+      setAssignments(prev => prev.filter(a => a.id !== unassignDialog.assignmentId));
+      toast.success(t("clients", "routineUnassigned").replace("{name}", unassignDialog.routineName));
+      setUnassignDialog(null);
       router.refresh();
     } else {
       toast.error(t("clients", "errorUnassign"));
-      setUnassignStep(p => ({ ...p, [assignmentId]: 0 }));
+      setIsUnassigning(false);
     }
   }
 
@@ -500,30 +503,15 @@ function RoutinesSection({
                     <Link href={`/dashboard/rutinas/${a.routine?.id}`}>
                       <Button variant="ghost" size="sm" className="text-xs h-7 shrink-0">{t("clients", "viewRoutine")}</Button>
                     </Link>
-                    {/* Unassign with double confirm */}
-                    {step === 1 ? (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          size="sm" variant="destructive"
-                          className="h-7 px-2 text-xs rounded-lg"
-                          onClick={() => handleUnassign(a.id, a.routine?.name ?? "")}
-                        >{t("clients", "yesUnassign")}</Button>
-                        <Button
-                          size="sm" variant="ghost"
-                          className="h-7 px-2 text-xs rounded-lg"
-                          onClick={() => setUnassignStep(p => ({ ...p, [a.id]: 0 }))}
-                        >{t("clients", "noCancel")}</Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="ghost" size="sm"
-                        className="h-7 w-7 p-0 text-gray-400 hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
-                        title="Desasignar rutina"
-                        onClick={() => setUnassignStep(p => ({ ...p, [a.id]: 1 }))}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
+                    {/* Unassign button */}
+                    <Button
+                      variant="ghost" size="sm"
+                      className="h-7 w-7 p-0 text-gray-400 hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
+                      title="Desasignar rutina"
+                      onClick={() => setUnassignDialog({ assignmentId: a.id, routineName: a.routine?.name ?? "" })}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
 
                   {/* Exercises + notes (expanded) */}
@@ -558,6 +546,34 @@ function RoutinesSection({
         )}
       </CardContent>
     </Card>
+
+    {/* Unassign Confirmation Dialog */}
+    {unassignDialog && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
+          <h2 className="text-lg font-semibold mb-2">Desasignar rutina</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            ¿Estás seguro de que quieres desasignar <strong>{unassignDialog.routineName}</strong> de este cliente?
+          </p>
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => setUnassignDialog(null)}
+              disabled={isUnassigning}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmUnassign}
+              disabled={isUnassigning}
+            >
+              {isUnassigning ? "Desasignando..." : "Sí, desasignar"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
 
