@@ -5,7 +5,6 @@ export async function POST(req: Request) {
   const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitacion/${token}`;
 
   // En producción, usar Resend/Sendgrid. Por ahora logueamos el link.
-  console.log(`[INVITACIÓN] Para: ${name} <${email}> → ${inviteUrl}`);
 
   // Si tienes RESEND_API_KEY configurada, descomentar:
   // await fetch("https://api.resend.com/emails", {

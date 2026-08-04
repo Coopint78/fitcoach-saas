@@ -32,8 +32,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    console.error("Register error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return NextResponse.json({ error: error.message || "Registration failed" }, { status: 400 });
+    return NextResponse.json({ error: "Registration failed" }, { status: 400 });
   }
 
   const userId = data.user?.id;
@@ -58,7 +57,6 @@ export async function POST(req: NextRequest) {
     );
 
   if (trainerError) {
-    console.error("Trainer row error:", JSON.stringify(trainerError, Object.getOwnPropertyNames(trainerError)));
     await adminClient.auth.admin.deleteUser(userId);
     return NextResponse.json({ error: "Registration failed, please try again" }, { status: 500 });
   }
@@ -86,8 +84,7 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     });
-  } catch (mailErr) {
-    console.error("Confirmation email failed:", mailErr);
+  } catch (_mailErr) {
     // Don't block registration if email fails — user can request resend
   }
 
@@ -113,8 +110,8 @@ export async function POST(req: NextRequest) {
           </div>
         `,
       });
-    } catch (mailErr) {
-      console.error("Admin notification email failed:", mailErr);
+    } catch (_mailErr) {
+      // Silently ignore admin email failure
     }
   }
 
