@@ -27,3 +27,8 @@ export async function detectInitialLanguage(): Promise<Lang> {
   if (cookieLang) return cookieLang;
   return await getLanguageFromRequest();
 }
+
+export function getLanguageFromRequestSync(acceptLanguageHeader: string | null): Lang {
+  if (!acceptLanguageHeader) return "es";
+  return acceptLanguageHeader.toLowerCase().startsWith("en") ? "en" : "es";
+}

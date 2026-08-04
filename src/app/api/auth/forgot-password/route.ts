@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { transporter, FROM_EMAIL } from "@/lib/mailer";
 import crypto from "crypto";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getLanguageFromRequestSync } from "@/lib/i18n/server";
+import { getPasswordResetTemplate } from "@/lib/email-templates";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,23 +45,15 @@ export async function POST(request: NextRequest) {
 
   const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${token}`;
 
+  const acceptLang = request.headers.get("accept-language");
+  const lang = getLanguageFromRequestSync(acceptLang);
+  const { subject, html } = getPasswordResetTemplate(lang, { resetUrl });
+
   await transporter.sendMail({
     from: FROM_EMAIL,
     to: email,
-    subject: "Restablecer contraseña — FitCoach",
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-        <h2 style="color:#4f46e5">Restablecer contraseña</h2>
-        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en FitCoach.</p>
-        <p>Hacé clic en el botón para crear una nueva contraseña:</p>
-        <div style="margin:24px 0;text-align:center;">
-          <a href="${resetUrl}" style="background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
-            Restablecer contraseña
-          </a>
-        </div>
-        <p style="color:#6b7280;font-size:13px">Este link expira en 1 hora. Si no solicitaste este cambio, ignorá este email.</p>
-      </div>
-    `,
+    subject,
+    html,
   });
 
   return NextResponse.json({ ok: true });
