@@ -314,7 +314,7 @@ export default function RutinaEditorPage() {
                 <Plus className="h-3.5 w-3.5" /> {t("routines", "addBtn")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-2xl max-w-lg">
+            <DialogContent className="rounded-2xl max-w-lg overflow-hidden">
               <DialogHeader><DialogTitle>{t("routines", "addExerciseTitle")}</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-1">
 
