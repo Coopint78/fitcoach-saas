@@ -28,17 +28,42 @@ function LoginForm() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(`${error.message}`);
-    } else {
-      const role = data.user?.user_metadata?.role;
-      router.push(role === "client" ? "/portal" : "/dashboard");
-      router.refresh();
+    if (!email || !password) {
+      toast.error(t("auth", "missingFields") || "Email and password required");
+      return;
     }
-    setLoading(false);
+    setLoading(true);
+    try {
+      const supabase = createClient();
+
+      // Add timeout to catch hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      clearTimeout(timeoutId);
+
+      if (error) {
+        console.error("Login error:", error.message);
+        toast.error(error.message || t("auth", "loginError") || "Login failed");
+      } else if (data?.user) {
+        const role = data.user?.user_metadata?.role;
+        toast.success(t("auth", "loginSuccess") || "Login successful");
+        router.push(role === "client" ? "/portal" : "/dashboard");
+        router.refresh();
+      } else {
+        toast.error(t("auth", "loginError") || "Login failed - no user data");
+      }
+    } catch (err) {
+      console.error("Login exception:", err);
+      if ((err as any)?.name === "AbortError") {
+        toast.error(t("auth", "timeout") || "Request timed out - please try again");
+      } else {
+        toast.error(t("auth", "loginError") || "An error occurred during login");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
