@@ -14,6 +14,23 @@ import { toast } from "sonner";
 import type { Exercise, RoutineItem } from "@/types/database";
 import { useLanguage } from "@/lib/i18n/context";
 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 type ExerciseSource = "mine" | "library";
 
 function exName(ex: Exercise, lang: string) {
@@ -21,6 +38,67 @@ function exName(ex: Exercise, lang: string) {
   return ex.name_es ?? ex.name;
 }
 
+// ── Sortable row ─────────────────────────────────────────────────────────────
+function SortableItem({
+  item,
+  idx,
+  lang,
+  t,
+  onRemove,
+}: {
+  item: RoutineItem & { exercise: Exercise };
+  idx: number;
+  lang: string;
+  t: (ns: string, key: string) => string;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-3.5 bg-muted/50 rounded-xl group"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground touch-none"
+        type="button"
+        aria-label="Reordenar"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{idx + 1}</span>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm">
+          {item.exercise?.is_system ? exName(item.exercise, lang) : item.exercise?.name}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {item.sets} {t("routines", "setsX")} {item.reps}
+        </p>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 rounded-lg"
+        onClick={() => onRemove(item.id)}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function RutinaEditorPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -37,6 +115,11 @@ export default function RutinaEditorPage() {
   const [form, setForm] = useState({ exercise_id: "", sets: "3", reps: "10" });
   const [selectedEx, setSelectedEx] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  );
 
   async function load() {
     const supabase = createClient();
@@ -105,6 +188,26 @@ export default function RutinaEditorPage() {
     const supabase = createClient();
     await supabase.from("routine_items").delete().eq("id", itemId);
     load();
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIdx = items.findIndex(i => i.id === active.id);
+    const newIdx = items.findIndex(i => i.id === over.id);
+    const reordered = arrayMove(items, oldIdx, newIdx);
+
+    // Optimistic update
+    setItems(reordered);
+
+    // Persist new order
+    const supabase = createClient();
+    await Promise.all(
+      reordered.map((item, idx) =>
+        supabase.from("routine_items").update({ order: idx }).eq("id", item.id)
+      )
+    );
   }
 
   return (
@@ -251,29 +354,22 @@ export default function RutinaEditorPage() {
               <p className="text-sm text-muted-foreground">{t("routines", "emptyRoutine")}</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {items.map((item, idx) => (
-                <div key={item.id} className="flex items-center gap-3 p-3.5 bg-muted/50 rounded-xl group">
-                  <GripVertical className="h-4 w-4 text-muted-foreground/40" />
-                  <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{idx + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">
-                      {item.exercise?.is_system
-                        ? exName(item.exercise, lang)
-                        : item.exercise?.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{item.sets} {t("routines", "setsX")} {item.reps}</p>
-                  </div>
-                  <Button
-                    variant="ghost" size="sm"
-                    className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 rounded-lg"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {items.map((item, idx) => (
+                    <SortableItem
+                      key={item.id}
+                      item={item}
+                      idx={idx}
+                      lang={lang}
+                      t={t}
+                      onRemove={removeItem}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>
