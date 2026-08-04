@@ -368,10 +368,11 @@ function exDisplayName(ex: RoutineExercise["exercise"], lang: string): string {
 }
 
 function RoutineNoteEditor({
-  item, clientId, lang,
+  item, clientId,
 }: {
-  item: RoutineExercise; clientId: string; lang: string;
+  item: RoutineExercise; clientId: string;
 }) {
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(item.coach_notes ?? "");
   const [saving, setSaving] = useState(false);
@@ -387,7 +388,7 @@ function RoutineNoteEditor({
       setEditing(false);
       item.coach_notes = value || null;
     } else {
-      toast.error("Error al guardar la nota");
+      toast.error(t("clients", "errorSaveNote"));
     }
     setSaving(false);
   }
@@ -404,7 +405,7 @@ function RoutineNoteEditor({
           }`}
         >
           <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
-          <span>{item.coach_notes || (lang === "en" ? "Add note for this client..." : "Agregar nota para este cliente...")}</span>
+          <span>{item.coach_notes || t("clients", "addNoteForClient")}</span>
           <Pencil className="h-3 w-3 ml-auto shrink-0 mt-0.5 opacity-50" />
         </button>
       ) : (
@@ -412,16 +413,16 @@ function RoutineNoteEditor({
           <Textarea
             value={value}
             onChange={e => setValue(e.target.value)}
-            placeholder={lang === "en" ? "Technique tips, reps adjustment, warnings..." : "Técnica, ajuste de reps, advertencias..."}
+            placeholder={t("clients", "notePlaceholder")}
             className="text-xs rounded-xl resize-none min-h-[64px]"
             autoFocus
           />
           <div className="flex gap-2">
             <Button size="sm" className="h-7 gap-1 rounded-lg text-xs bg-indigo-600 hover:bg-indigo-700" onClick={save} disabled={saving}>
-              <Check className="h-3 w-3" /> {saving ? "..." : (lang === "en" ? "Save" : "Guardar")}
+              <Check className="h-3 w-3" /> {saving ? t("clients", "saving") : t("clients", "saveNote")}
             </Button>
             <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-lg text-xs" onClick={() => { setEditing(false); setValue(item.coach_notes ?? ""); }}>
-              <X className="h-3 w-3" /> {lang === "en" ? "Cancel" : "Cancelar"}
+              <X className="h-3 w-3" /> {t("clients", "cancel")}
             </Button>
           </div>
         </div>
@@ -453,10 +454,10 @@ function RoutinesSection({
     const res = await fetch(`/api/assignments/${assignmentId}`, { method: "DELETE" });
     if (res.ok) {
       setAssignments(prev => prev.filter(a => a.id !== assignmentId));
-      toast.success(`Rutina "${routineName}" desasignada`);
+      toast.success(t("clients", "routineUnassigned").replace("{name}", routineName));
       router.refresh();
     } else {
-      toast.error("Error al desasignar la rutina");
+      toast.error(t("clients", "errorUnassign"));
       setUnassignStep(p => ({ ...p, [assignmentId]: 0 }));
     }
   }
@@ -490,7 +491,7 @@ function RoutinesSection({
                       <ClipboardList className="h-4 w-4 text-indigo-500 shrink-0" />
                       <span className="font-medium text-sm truncate">{a.routine?.name}</span>
                       {items.length > 0 && (
-                        <span className="text-xs text-gray-400 shrink-0">({items.length})</span>
+                        <span className="text-xs text-gray-400 shrink-0">({items.length} {t("clients", "exercisesCount")})</span>
                       )}
                       {isOpen
                         ? <ChevronUp className="h-4 w-4 text-gray-400 ml-auto shrink-0" />
@@ -506,12 +507,12 @@ function RoutinesSection({
                           size="sm" variant="destructive"
                           className="h-7 px-2 text-xs rounded-lg"
                           onClick={() => handleUnassign(a.id, a.routine?.name ?? "")}
-                        >Sí, quitar</Button>
+                        >{t("clients", "yesUnassign")}</Button>
                         <Button
                           size="sm" variant="ghost"
                           className="h-7 px-2 text-xs rounded-lg"
                           onClick={() => setUnassignStep(p => ({ ...p, [a.id]: 0 }))}
-                        >No</Button>
+                        >{t("clients", "noCancel")}</Button>
                       </div>
                     ) : (
                       <Button
@@ -529,7 +530,7 @@ function RoutinesSection({
                   {isOpen && (
                     items.length === 0 ? (
                       <div className="px-4 py-4 text-center text-xs text-gray-400">
-                        {lang === "en" ? "No exercises in this routine." : "Esta rutina no tiene ejercicios."}
+                        {t("clients", "noExercisesInRoutine")}
                       </div>
                     ) : (
                       <div className="divide-y divide-gray-100">
@@ -539,11 +540,11 @@ function RoutinesSection({
                               <span className="text-xs font-bold text-gray-400 w-5 shrink-0 mt-0.5">{idx + 1}</span>
                               <div className="min-w-0">
                                 <p className="font-semibold text-sm">{exDisplayName(item.exercise, lang)}</p>
-                                <p className="text-xs text-gray-500">{item.sets} series × {item.reps}</p>
+                                <p className="text-xs text-gray-500">{item.sets} {t("routines", "setsX")} {item.reps}</p>
                               </div>
                             </div>
                             <div className="pl-7">
-                              <RoutineNoteEditor item={item} clientId={client.id} lang={lang} />
+                              <RoutineNoteEditor item={item} clientId={client.id} />
                             </div>
                           </div>
                         ))}

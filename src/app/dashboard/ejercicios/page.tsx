@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Video, Pencil, Layers, Upload, X, Play, BookOpen, Search, Dumbbell } from "lucide-react";
+import { Plus, Video, Pencil, Layers, Upload, X, Play, BookOpen, Search, Dumbbell, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
@@ -217,6 +217,23 @@ export default function EjerciciosPage() {
 
   // Routines (for "add to routine" dialog)
   const [routines, setRoutines] = useState<Routine[]>([]);
+
+  // Delete confirm state: 0=idle, 1=confirm, 2=deleting
+  const [deleteStep, setDeleteStep] = useState<Record<string, number>>({});
+
+  async function handleDeleteExercise(ex: Exercise) {
+    setDeleteStep(p => ({ ...p, [ex.id]: 2 }));
+    const res = await fetch(`/api/exercises/${ex.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setExercises(prev => prev.filter(e => e.id !== ex.id));
+      toast.success(t("exercises", "exerciseDeleted"));
+    } else {
+      const data = await res.json();
+      if (data.error === "in_use") toast.error(t("exercises", "inUseError"));
+      else toast.error(t("exercises", "errorDelete"));
+      setDeleteStep(p => ({ ...p, [ex.id]: 0 }));
+    }
+  }
 
   // Create/edit dialog
   const [open, setOpen] = useState(false);
@@ -463,10 +480,30 @@ export default function EjerciciosPage() {
                 <Card key={ex.id} className="rounded-2xl border-border hover:border-primary/30 transition-all group">
                   <CardContent className="p-5 space-y-2">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold">{ex.name}</h3>
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(ex)} className="h-7 w-7 p-0 shrink-0 opacity-0 group-hover:opacity-100 rounded-lg">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
+                      <h3 className="font-semibold flex-1 min-w-0">{ex.name}</h3>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(ex)} className="h-7 w-7 p-0 rounded-lg">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        {deleteStep[ex.id] === 1 ? (
+                          <>
+                            <Button size="sm" variant="destructive" className="h-7 px-2 text-xs rounded-lg"
+                              onClick={() => handleDeleteExercise(ex)}>
+                              {t("exercises", "yesDelete")}
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs rounded-lg"
+                              onClick={() => setDeleteStep(p => ({ ...p, [ex.id]: 0 }))}>
+                              {t("exercises", "noCancel")}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button variant="ghost" size="sm"
+                            className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => setDeleteStep(p => ({ ...p, [ex.id]: 1 }))}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     {ex.description && <p className="text-xs text-muted-foreground line-clamp-2">{ex.description}</p>}
                     {ex.video_url && (

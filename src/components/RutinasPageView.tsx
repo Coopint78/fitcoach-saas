@@ -34,13 +34,13 @@ export default function RutinasPageView({ routines: initialRoutines }: { routine
     const res = await fetch(`/api/routines/${r.id}`, { method: "DELETE" });
     if (res.ok) {
       setRoutines(prev => prev.filter(x => x.id !== r.id));
-      toast.success(`Rutina "${r.name}" eliminada`);
+      toast.success(t("routines", "routineDeleted").replace("{name}", r.name));
     } else {
       const data = await res.json();
       if (data.error === "assigned") {
-        toast.error("No se puede eliminar: esta rutina está asignada a uno o más clientes.");
+        toast.error(t("routines", "assignedError"));
       } else {
-        toast.error("Error al eliminar la rutina");
+        toast.error(t("routines", "errorDelete"));
       }
       setDeleteStep(p => ({ ...p, [r.id]: 0 }));
     }
@@ -124,7 +124,7 @@ export default function RutinasPageView({ routines: initialRoutines }: { routine
                           disabled={deleteStep[r.id] === 2}
                           onClick={e => { e.preventDefault(); handleDelete(r); }}
                         >
-                          Sí, borrar
+                          {t("routines", "yesDelete")}
                         </Button>
                         <Button
                           size="sm"
@@ -132,7 +132,7 @@ export default function RutinasPageView({ routines: initialRoutines }: { routine
                           className="h-7 px-2 text-xs rounded-lg"
                           onClick={e => { e.preventDefault(); setDeleteStep(p => ({ ...p, [r.id]: 0 })); }}
                         >
-                          No
+                          {t("routines", "noCancel")}
                         </Button>
                       </div>
                     ) : (
