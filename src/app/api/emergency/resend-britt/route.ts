@@ -36,19 +36,19 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail({
       from: FROM_EMAIL,
       to: trainer.email,
-      subject: "Confirmá tu cuenta en FitCoach",
+      subject: "Confirm your FitCoach account",
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px">
-          <h2 style="color:#111827;margin-top:0">Bienvenido/a a FitCoach, ${trainer.name.split(" ")[0]}!</h2>
-          <p style="color:#374151">Para activar tu cuenta y comenzar tu prueba gratuita de 14 días, confirmá tu email haciendo clic en el botón de abajo.</p>
+          <h2 style="color:#111827;margin-top:0">Welcome to FitCoach, ${trainer.name.split(" ")[0]}!</h2>
+          <p style="color:#374151">To activate your account and start your free 14-day trial, confirm your email by clicking the button below.</p>
           <div style="text-align:center;margin:32px 0">
             <a href="${confirmUrl}" style="background:#4f46e5;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px">
-              Confirmar mi cuenta
+              Confirm my account
             </a>
           </div>
-          <p style="color:#6b7280;font-size:13px">Si el botón no funciona, copiá este enlace en tu navegador:<br/><a href="${confirmUrl}" style="color:#4f46e5">${confirmUrl}</a></p>
+          <p style="color:#6b7280;font-size:13px">If the button doesn't work, copy this link in your browser:<br/><a href="${confirmUrl}" style="color:#4f46e5">${confirmUrl}</a></p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
-          <p style="color:#9ca3af;font-size:12px;margin:0">FitCoach · Este enlace expira en 48 horas.</p>
+          <p style="color:#9ca3af;font-size:12px;margin:0">FitCoach · This link expires in 48 hours.</p>
         </div>
       `,
     });

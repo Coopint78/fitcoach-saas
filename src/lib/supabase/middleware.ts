@@ -36,6 +36,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/stripe/webhook") ||
     pathname.startsWith("/api/cron/") ||
+    pathname.startsWith("/api/emergency/") ||
     pathname.startsWith("/entrenadores");
 
   // Skip Supabase round-trip entirely for public routes
