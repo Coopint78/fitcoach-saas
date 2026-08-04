@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { transporter, FROM_EMAIL } from "@/lib/mailer";
 import crypto from "crypto";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 registrations per minute per IP
+  if (!checkRateLimit(req, 5, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const { name, email, password } = await req.json();
 
   if (!name || !email || !password) {

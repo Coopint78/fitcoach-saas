@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const ADMIN_JWT_SECRET = new TextEncoder().encode(
   process.env.ADMIN_JWT_SECRET || (() => { throw new Error("ADMIN_JWT_SECRET not configured"); })()
@@ -16,6 +17,11 @@ function adminSupabase() {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 login attempts per minute per IP (brute force protection)
+  if (!checkRateLimit(request, 5, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const { email, password } = await request.json();
 
   if (!email || !password) {

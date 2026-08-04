@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { transporter, FROM_EMAIL } from "@/lib/mailer";
 import crypto from "crypto";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,6 +10,11 @@ const supabaseAdmin = createClient(
 );
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 3 forgot-password requests per minute per IP (brute force protection)
+  if (!checkRateLimit(request, 3, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const { email } = await request.json();
   if (!email) return NextResponse.json({ error: "Email requerido" }, { status: 400 });
 
