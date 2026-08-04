@@ -3,11 +3,26 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Dumbbell, Users, ClipboardList, TrendingUp } from "lucide-react";
+import { CheckCircle, Dumbbell, Users, ClipboardList, TrendingUp, Globe } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
   const { t, lang } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+  const [currentLang, setCurrentLang] = useState(lang);
+
+  useEffect(() => {
+    setMounted(true);
+    setCurrentLang(lang);
+  }, [lang]);
+
+  const toggleLanguage = () => {
+    const newLang = currentLang === "en" ? "es" : "en";
+    setCurrentLang(newLang);
+    localStorage.setItem("fitcoach-home-lang", newLang);
+    window.location.reload();
+  };
 
   const features = [
     { icon: Users, title: t("landing", "f1Title"), desc: t("landing", "f1Desc") },
@@ -32,7 +47,16 @@ export default function LandingPage() {
           <Dumbbell className="h-6 w-6" />
           FitCoach
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {mounted && (
+            <button
+              onClick={toggleLanguage}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title={currentLang === "en" ? "Cambiar a Español" : "Switch to English"}
+            >
+              <Globe className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
           <Link href="/login">
             <Button variant="ghost">{t("landing", "signIn")}</Button>
           </Link>
