@@ -29,11 +29,28 @@ export interface Client {
 
 export interface Exercise {
   id: string;
-  trainer_id: string;
+  trainer_id: string | null;
   name: string;
   description: string | null;
   video_url: string | null;
   created_at: string;
+  // Library fields (is_system = true exercises)
+  is_system?: boolean;
+  source?: string;
+  image_url?: string | null;
+  image_url_end?: string | null;
+  primary_muscle?: string | null;
+  primary_muscles?: string[] | null;
+  secondary_muscles?: string[] | null;
+  category?: string | null;
+  level?: string | null;
+  equipment?: string | null;
+  force?: string | null;
+  mechanic?: string | null;
+  name_en?: string | null;
+  name_es?: string | null;
+  description_en?: string | null;
+  description_es?: string | null;
 }
 
 export interface Routine {
