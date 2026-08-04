@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return rateLimitResponse();
   }
 
-  const { name, email, password } = await req.json();
+  const { name, email, password, referrerUsername } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -49,6 +49,19 @@ export async function POST(req: NextRequest) {
   const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
   const confirmToken = crypto.randomBytes(32).toString("hex");
 
+  // Find referrer trainer if username provided
+  let referredByTrainerId: string | null = null;
+  if (referrerUsername) {
+    const { data: referrer } = await adminClient
+      .from("trainers")
+      .select("id")
+      .eq("username", referrerUsername.toLowerCase())
+      .single();
+    if (referrer) {
+      referredByTrainerId = referrer.id;
+    }
+  }
+
   const { error: trainerError } = await adminClient
     .from("trainers")
     .upsert(
@@ -60,6 +73,7 @@ export async function POST(req: NextRequest) {
         subscription_status: "trialing",
         confirm_token: confirmToken,
         confirmed_at: null,
+        referred_by_trainer_id: referredByTrainerId,
       },
       { onConflict: "user_id" }
     );
