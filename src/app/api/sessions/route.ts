@@ -52,6 +52,13 @@ export async function POST(request: NextRequest) {
 
     if (!client_id || !scheduled_at) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
+    // Verify client belongs to this trainer
+    const { rows: clientRows } = await pool.query(
+      `SELECT id FROM clients WHERE id = $1 AND trainer_id = $2 LIMIT 1`,
+      [client_id, trainer.id]
+    );
+    if (!clientRows.length) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+
     const { rows } = await pool.query(
       `INSERT INTO sessions (trainer_id, client_id, scheduled_at, duration_minutes, title, notes, status, requested_by, confirmed_at)
        VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', 'trainer', $7)
