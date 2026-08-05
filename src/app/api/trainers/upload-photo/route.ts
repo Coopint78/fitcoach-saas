@@ -16,7 +16,13 @@ export async function POST(req: NextRequest) {
   if (file.size > 5 * 1024 * 1024)
     return NextResponse.json({ error: "File too large (max 5 MB)" }, { status: 400 });
 
-  const ext = file.name.split(".").pop() ?? "jpg";
+  // Whitelist allowed extensions
+  const allowedExts = ["jpg", "jpeg", "png", "webp"];
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (!ext || !allowedExts.includes(ext)) {
+    return NextResponse.json({ error: "Invalid file extension" }, { status: 400 });
+  }
+
   const path = `trainer-photos/${user.id}.${ext}`;
 
   const { error: uploadError } = await supabase.storage

@@ -6,9 +6,37 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Simple in-memory rate limiter
+const resetAttempts = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX = 5; // 5 attempts per window
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const attempt = resetAttempts.get(ip);
+
+  if (!attempt || now > attempt.resetTime) {
+    resetAttempts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (attempt.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  attempt.count++;
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   const { token, password } = await request.json();
   if (!token || !password) return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+
+  // Rate limiting by IP
+  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: "Demasiados intentos. Intenta más tarde." }, { status: 429 });
+  }
 
   // Password must be 12+ chars, 1 uppercase, 1 number, 1 special char
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;

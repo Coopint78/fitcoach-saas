@@ -22,6 +22,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
   }
 
+  // Validate password strength: 12+ chars, uppercase, number, special char
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return NextResponse.json({
+      error: "Contraseña debe tener 12+ caracteres con mayúscula, número y carácter especial"
+    }, { status: 400 });
+  }
+
   const passwordHash = await bcrypt.hash(newPassword, 12);
 
   const supabase = adminSupabase();

@@ -18,6 +18,13 @@ export async function GET(req: NextRequest) {
   if (!clientId) return NextResponse.json({ error: "client_id required" }, { status: 400 });
 
   try {
+    // Verify user owns this client
+    const { rows: clientRows } = await pool.query(
+      `SELECT id FROM clients WHERE id = $1 AND user_id = $2 LIMIT 1`,
+      [clientId, user.id]
+    );
+    if (clientRows.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const { rows } = await pool.query(
       `SELECT * FROM client_photos WHERE client_id = $1 ORDER BY taken_at DESC`,
       [clientId]
@@ -82,13 +89,20 @@ export async function PATCH(req: NextRequest) {
   const { id, shared_with_client, note } = await req.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const updates: Record<string, unknown> = {};
-  if (shared_with_client !== undefined) updates.shared_with_client = shared_with_client;
-  if (note !== undefined) updates.note = note;
-
-  if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true });
-
   try {
+    // Verify user owns this photo
+    const { rows: photoRows } = await pool.query(
+      `SELECT id FROM client_photos WHERE id = $1 AND trainer_id = (SELECT id FROM trainers WHERE user_id = $2 LIMIT 1) LIMIT 1`,
+      [id, user.id]
+    );
+    if (photoRows.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const updates: Record<string, unknown> = {};
+    if (shared_with_client !== undefined) updates.shared_with_client = shared_with_client;
+    if (note !== undefined) updates.note = note;
+
+    if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true });
+
     const setClauses = Object.keys(updates).map((k, i) => `${k} = $${i + 2}`);
     const values = [id, ...Object.values(updates)];
     await pool.query(`UPDATE client_photos SET ${setClauses.join(", ")} WHERE id = $1`, values);
@@ -107,8 +121,13 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   try {
-    const { rows } = await pool.query(`SELECT url FROM client_photos WHERE id = $1 LIMIT 1`, [id]);
+    // Verify user owns this photo
+    const { rows } = await pool.query(
+      `SELECT url FROM client_photos WHERE id = $1 AND trainer_id = (SELECT id FROM trainers WHERE user_id = $2 LIMIT 1) LIMIT 1`,
+      [id, user.id]
+    );
     const photo = rows[0] ?? null;
+    if (!photo) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     await pool.query(`DELETE FROM client_photos WHERE id = $1`, [id]);
 

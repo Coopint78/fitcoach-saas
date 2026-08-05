@@ -12,6 +12,13 @@ export async function GET(req: NextRequest) {
   if (!clientId) return NextResponse.json({ error: "client_id required" }, { status: 400 });
 
   try {
+    // Verify user owns this client
+    const { rows: clientRows } = await pool.query(
+      `SELECT id FROM clients WHERE id = $1 AND user_id = $2 LIMIT 1`,
+      [clientId, user.id]
+    );
+    if (clientRows.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const { rows } = await pool.query(
       `SELECT cpc.*,
         json_build_object('id', pb.id, 'url', pb.url, 'taken_at', pb.taken_at, 'note', pb.note) AS before,
@@ -46,6 +53,15 @@ export async function POST(req: NextRequest) {
     const { client_id, photo_before_id, photo_after_id } = await req.json();
     if (!client_id || !photo_before_id || !photo_after_id)
       return NextResponse.json({ error: "client_id, photo_before_id and photo_after_id required" }, { status: 400 });
+
+    // Verify both photos belong to the same client and trainer owns them
+    const { rows: photoCheck } = await pool.query(
+      `SELECT id FROM client_photos
+       WHERE client_id = $1 AND trainer_id = $2
+       AND id IN ($3, $4)`,
+      [client_id, trainer.id, photo_before_id, photo_after_id]
+    );
+    if (photoCheck.length !== 2) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { rows: insertRows } = await pool.query(
       `INSERT INTO client_photo_comparisons (client_id, trainer_id, photo_before_id, photo_after_id, shared_with_client)
@@ -82,6 +98,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "id and shared_with_client required" }, { status: 400 });
 
   try {
+    // Verify user owns this comparison
+    const { rows: compRows } = await pool.query(
+      `SELECT id FROM client_photo_comparisons WHERE id = $1 AND trainer_id = (SELECT id FROM trainers WHERE user_id = $2 LIMIT 1) LIMIT 1`,
+      [id, user.id]
+    );
+    if (compRows.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     await pool.query(
       `UPDATE client_photo_comparisons SET shared_with_client = $1 WHERE id = $2`,
       [shared_with_client, id]
@@ -102,6 +125,13 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   try {
+    // Verify user owns this comparison
+    const { rows: compRows } = await pool.query(
+      `SELECT id FROM client_photo_comparisons WHERE id = $1 AND trainer_id = (SELECT id FROM trainers WHERE user_id = $2 LIMIT 1) LIMIT 1`,
+      [id, user.id]
+    );
+    if (compRows.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     await pool.query(`DELETE FROM client_photo_comparisons WHERE id = $1`, [id]);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {

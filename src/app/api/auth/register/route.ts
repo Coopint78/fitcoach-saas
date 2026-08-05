@@ -52,6 +52,12 @@ export async function POST(req: NextRequest) {
   // Find referrer trainer if username provided
   let referredByTrainerId: string | null = null;
   if (referrerUsername) {
+    // Validate referrer username: alphanumeric and hyphens only, 3-30 chars
+    const usernameRegex = /^[a-z0-9-]{3,30}$/i;
+    if (!usernameRegex.test(referrerUsername)) {
+      return NextResponse.json({ error: "Invalid referrer username" }, { status: 400 });
+    }
+
     const { data: referrer } = await adminClient
       .from("trainers")
       .select("id")
