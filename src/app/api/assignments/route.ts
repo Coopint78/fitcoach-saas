@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import pool from "@/lib/db";
+import { validateUUID, getSafeErrorMessage } from "@/lib/validation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 assignments per minute per IP
+  if (!checkRateLimit(req, 10, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,9 +21,13 @@ export async function POST(req: NextRequest) {
   const trainer = trainerRows[0];
   if (!trainer) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { routine_id, client_id } = await req.json();
-  if (!routine_id || !client_id) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  let routine_id, client_id;
+  try {
+    const body = await req.json();
+    routine_id = validateUUID(body.routine_id, "routine_id");
+    client_id = validateUUID(body.client_id, "client_id");
+  } catch (err) {
+    return NextResponse.json({ error: getSafeErrorMessage(err) }, { status: 400 });
   }
 
   // Verify trainer owns the routine and the client
