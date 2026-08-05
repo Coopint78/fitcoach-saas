@@ -10,13 +10,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Eye, EyeOff, ExternalLink, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import LocationSelector from "@/components/LocationSelector";
 
 type Trainer = {
   id: string;
   name: string;
   bio: string | null;
   specialty: string | null;
-  location: string | null;
+  location_country: string | null;
+  location_state: string | null;
+  location_city: string | null;
+  location_zip_code: string | null;
   instagram: string | null;
   profile_photo: string | null;
   public_profile: boolean | null;
@@ -52,11 +56,16 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
   const [form, setForm] = useState({
     bio: initial.bio ?? "",
     specialty: initial.specialty ?? "",
-    location: initial.location ?? "",
+    location_country: initial.location_country ?? "",
+    location_state: initial.location_state ?? "",
+    location_city: initial.location_city ?? "",
+    location_zip_code: initial.location_zip_code ?? "",
     instagram: initial.instagram ?? "",
     profile_photo: initial.profile_photo ?? "",
     public_profile: initial.public_profile ?? false,
   });
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string>(initial.profile_photo ?? "");
@@ -89,6 +98,17 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
   }
 
   async function handleSave() {
+    // Validate required fields
+    const newErrors: { [key: string]: string } = {};
+    if (!form.location_country) newErrors.location_country = "País es requerido";
+    if (!form.location_zip_code) newErrors.location_zip_code = "Código postal es requerido";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Por favor completa los campos requeridos");
+      return;
+    }
+
     setSaving(true);
     const res = await fetch("/api/trainers/update-profile", {
       method: "POST",
@@ -97,8 +117,12 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
     });
     const data = await res.json();
     setSaving(false);
-    if (data.ok) toast.success(t("publicProfile", "successSave"));
-    else toast.error(data.error ?? t("publicProfile", "errorSave"));
+    if (data.ok) {
+      toast.success(t("publicProfile", "successSave"));
+      setErrors({});
+    } else {
+      toast.error(data.error ?? t("publicProfile", "errorSave"));
+    }
   }
 
   function update(field: string, value: string | boolean) {
@@ -181,10 +205,30 @@ export default function PublicProfileEditor({ trainer: initial }: { trainer: Tra
             <Label>{t("publicProfile", "specialty")}</Label>
             <Input value={form.specialty} onChange={e => update("specialty", e.target.value)} placeholder={t("publicProfile", "specialtyPlaceholder")} className="rounded-xl h-10" />
           </div>
-          <div className="space-y-1.5">
-            <Label>{t("publicProfile", "location")}</Label>
-            <Input value={form.location} onChange={e => update("location", e.target.value)} placeholder={t("publicProfile", "locationPlaceholder")} className="rounded-xl h-10" />
+
+          {/* Location Fields */}
+          <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
+            <h3 className="text-sm font-semibold text-white">{t("publicProfile", "location")}</h3>
+            <LocationSelector
+              selectedCountry={form.location_country}
+              selectedState={form.location_state}
+              selectedCity={form.location_city}
+              selectedZipCode={form.location_zip_code}
+              onCountryChange={(country) => {
+                update("location_country", country);
+                setErrors(e => ({ ...e, location_country: "" }));
+              }}
+              onStateChange={(state) => update("location_state", state || "")}
+              onCityChange={(city) => update("location_city", city)}
+              onZipCodeChange={(zipCode) => {
+                update("location_zip_code", zipCode);
+                setErrors(e => ({ ...e, location_zip_code: "" }));
+              }}
+            />
+            {errors.location_country && <p className="text-xs text-red-400">{errors.location_country}</p>}
+            {errors.location_zip_code && <p className="text-xs text-red-400">{errors.location_zip_code}</p>}
           </div>
+
           <div className="space-y-1.5">
             <Label>{t("publicProfile", "bio")}</Label>
             <Textarea value={form.bio} onChange={e => update("bio", e.target.value)} placeholder={t("publicProfile", "bioPlaceholder")} rows={4} className="rounded-xl" />
