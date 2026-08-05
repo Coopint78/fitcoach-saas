@@ -12,9 +12,9 @@ export async function GET(req: NextRequest) {
   if (!clientId) return NextResponse.json({ error: "client_id required" }, { status: 400 });
 
   try {
-    // Verify user owns this client
+    // Verify trainer owns this client
     const { rows: clientRows } = await pool.query(
-      `SELECT id FROM clients WHERE id = $1 AND user_id = $2 LIMIT 1`,
+      `SELECT id FROM clients WHERE id = $1 AND trainer_id = (SELECT id FROM trainers WHERE user_id = $2 LIMIT 1) LIMIT 1`,
       [clientId, user.id]
     );
     if (clientRows.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
