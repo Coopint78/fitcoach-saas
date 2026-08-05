@@ -1,28 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { randomBytes } from "crypto";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Generate random alphanumeric code (6 chars)
+// Generate cryptographically secure random code (6 chars)
 function generateShortCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const bytes = randomBytes(6);
   let code = "";
   for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars[bytes[i] % chars.length];
   }
   return code;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { trainerId } = await req.json();
-
-    if (!trainerId) {
-      return NextResponse.json({ error: "trainerId required" }, { status: 400 });
+    // Get authenticated user
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { data: authUser, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !authUser.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get trainer_id from authenticated user (don't trust client input)
+    const { data: trainer, error: trainerError } = await supabase
+      .from("trainers")
+      .select("id")
+      .eq("user_id", authUser.user.id)
+      .single();
+
+    if (trainerError || !trainer) {
+      return NextResponse.json({ error: "Trainer not found" }, { status: 404 });
+    }
+
+    const trainerId = trainer.id;
 
     // Check if trainer already has a referral code
     const { data: existing } = await supabase
