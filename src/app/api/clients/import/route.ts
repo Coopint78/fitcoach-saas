@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSafeErrorMessage } from "@/lib/error-safe";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 interface ContactToImport {
   name: string;
@@ -14,7 +15,12 @@ const PLAN_LIMITS: Record<string, number | null> = {
   active: null,
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Rate limit: 5 imports per minute per IP
+  if (!checkRateLimit(req, 5, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
