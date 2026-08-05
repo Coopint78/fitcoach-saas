@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyAdminSession } from "@/lib/admin/auth";
-import { getSafeErrorMessage } from "@/lib/error-safe";
+import { getSafeErrorMessage, isValidEmail } from "@/lib/error-safe";
+import { validateUUID, validateStringLength } from "@/lib/validation";
 
 function adminSupabase() {
   return createClient(
@@ -17,9 +18,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { id, newEmail, first_name, last_name } = await request.json();
-  if (!id) {
-    return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
+  let id, newEmail, first_name, last_name;
+  try {
+    const body = await request.json();
+    id = validateUUID(body.id, "id");
+    if (body.newEmail && !isValidEmail(body.newEmail)) {
+      throw new Error("Invalid email format");
+    }
+    newEmail = body.newEmail;
+    if (body.first_name) first_name = validateStringLength(body.first_name, "first_name", 1, 100);
+    if (body.last_name) last_name = validateStringLength(body.last_name, "last_name", 1, 100);
+  } catch (err) {
+    return NextResponse.json({ error: getSafeErrorMessage(err) }, { status: 400 });
   }
 
   const updates: Record<string, string | null> = {};

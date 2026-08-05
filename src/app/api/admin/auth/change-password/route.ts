@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { verifyAdminSession } from "@/lib/admin/auth";
-import { getSafeErrorMessage } from "@/lib/error-safe";
+import { getSafeErrorMessage, isValidEmail } from "@/lib/error-safe";
+import { validateStringLength } from "@/lib/validation";
 
 function adminSupabase() {
   return createClient(
@@ -18,9 +19,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const { email, newPassword } = await request.json();
-  if (!email || !newPassword) {
-    return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
+  let email, newPassword;
+  try {
+    const body = await request.json();
+    if (!body.email || !body.newPassword) throw new Error("Missing fields");
+    if (!isValidEmail(body.email)) throw new Error("Invalid email");
+    email = body.email;
+    newPassword = validateStringLength(body.newPassword, "password", 12, 255);
+  } catch (err) {
+    return NextResponse.json({ error: getSafeErrorMessage(err) }, { status: 400 });
   }
 
   // Validate password strength: 12+ chars, uppercase, number, special char

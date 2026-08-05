@@ -1,3 +1,7 @@
+export function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export function getSafeErrorMessage(error: unknown): string {
   // Never expose internal error details to client
   // Return generic message instead
