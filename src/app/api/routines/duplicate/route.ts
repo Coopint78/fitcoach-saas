@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import pool from "@/lib/db";
+import { validateUUID, validateStringLength, getSafeErrorMessage } from "@/lib/validation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 duplicate requests per minute per IP
+  if (!checkRateLimit(req, 10, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { routine_id, new_name } = await req.json();
+    const body = await req.json();
+    const routine_id = validateUUID(body.routine_id, "routine_id");
+    const new_name = validateStringLength(body.new_name, "new_name", 1, 100);
 
     const { rows: trainerRows } = await pool.query(
       `SELECT id FROM trainers WHERE user_id = $1 LIMIT 1`,
