@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import pool from "@/lib/db";
+import { validateUUID, validateStringLength, getSafeErrorMessage } from "@/lib/validation";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 async function getTrainer(userId: string) {
   const { rows } = await pool.query(`SELECT id FROM trainers WHERE user_id = $1 LIMIT 1`, [userId]);
@@ -20,6 +22,12 @@ export async function GET(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   const { clientId } = await params;
+  try {
+    validateUUID(clientId, "clientId");
+  } catch {
+    return NextResponse.json({ error: "Invalid clientId format" }, { status: 400 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,7 +48,18 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
+  // Rate limit: 20 note updates per minute per IP
+  if (!checkRateLimit(req, 20, 60 * 1000)) {
+    return rateLimitResponse();
+  }
+
   const { clientId } = await params;
+  try {
+    validateUUID(clientId, "clientId");
+  } catch {
+    return NextResponse.json({ error: "Invalid clientId format" }, { status: 400 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,9 +69,14 @@ export async function POST(
   if (!await verifyClientOwnership(trainer.id, clientId))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const body = await req.json();
-  const { routine_item_id, notes } = body as { routine_item_id: string; notes: string };
-  if (!routine_item_id) return NextResponse.json({ error: "Missing routine_item_id" }, { status: 400 });
+  let routine_item_id, notes;
+  try {
+    const body = await req.json();
+    routine_item_id = validateUUID(body.routine_item_id, "routine_item_id");
+    if (body.notes) notes = validateStringLength(body.notes, "notes", 1, 1000);
+  } catch (err) {
+    return NextResponse.json({ error: getSafeErrorMessage(err) }, { status: 400 });
+  }
 
   if (!notes || notes.trim() === "") {
     // Delete note if empty
