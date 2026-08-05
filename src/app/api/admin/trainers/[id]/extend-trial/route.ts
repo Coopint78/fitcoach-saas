@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyAdminSession } from "@/lib/admin/auth";
 import { getSafeErrorMessage } from "@/lib/error-safe";
+import { validateUUID } from "@/lib/validation";
 
 function adminSupabase() {
   return createClient(
@@ -21,11 +22,22 @@ export async function POST(
   }
 
   const { id } = await params;
+  try {
+    validateUUID(id, "id");
+  } catch {
+    return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const { trial_ends_at } = body;
 
   if (!trial_ends_at) {
     return NextResponse.json({ error: "trial_ends_at es requerido" }, { status: 400 });
+  }
+
+  // Validate date format (ISO 8601)
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(trial_ends_at)) {
+    return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
   }
 
   const supabase = adminSupabase();
