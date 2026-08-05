@@ -6,11 +6,23 @@ const ADMIN_JWT_SECRET = new TextEncoder().encode(
   process.env.ADMIN_JWT_SECRET ?? "fitcoach-admin-secret-2026"
 );
 
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  return response;
+}
+
 async function handleAdminRoute(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Login page is always accessible
-  if (pathname === "/admin/login") return NextResponse.next();
+  if (pathname === "/admin/login") return addSecurityHeaders(NextResponse.next());
 
   const cookie = request.cookies.get("admin-session");
 
@@ -20,7 +32,7 @@ async function handleAdminRoute(request: NextRequest) {
 
   try {
     await jwtVerify(cookie.value, ADMIN_JWT_SECRET);
-    return NextResponse.next();
+    return addSecurityHeaders(NextResponse.next());
   } catch {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
@@ -33,7 +45,8 @@ export async function proxy(request: NextRequest) {
     return handleAdminRoute(request);
   }
 
-  return await updateSession(request);
+  const response = await updateSession(request);
+  return addSecurityHeaders(response);
 }
 
 export const config = {
