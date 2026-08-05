@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { getSafeErrorMessage } from "@/lib/error-safe";
 
 function adminSupabase() {
   return createClient(
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getSafeErrorMessage(error) }, { status: 500 });
   }
 
   return NextResponse.json({ users: data });
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getSafeErrorMessage(error) }, { status: 500 });
   }
 
   return NextResponse.json({ user: data });

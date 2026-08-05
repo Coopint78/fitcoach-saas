@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { getSafeErrorMessage } from "@/lib/error-safe";
 
 function adminSupabase() {
   return createClient(
@@ -37,7 +38,7 @@ export async function DELETE(
   const { error } = await supabase.from("admin_users").delete().eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getSafeErrorMessage(error) }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

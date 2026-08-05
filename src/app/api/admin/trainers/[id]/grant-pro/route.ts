@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyAdminSession } from "@/lib/admin/auth";
+import { getSafeErrorMessage } from "@/lib/error-safe";
 
 function adminSupabase() {
   return createClient(
@@ -42,11 +43,11 @@ export async function POST(
         .eq("id", id);
 
       if (fallbackError) {
-        return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+        return NextResponse.json({ error: getSafeErrorMessage(fallbackError) }, { status: 500 });
       }
       return NextResponse.json({ ok: true, note: "is_pro_free column not yet migrated" });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getSafeErrorMessage(error) }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

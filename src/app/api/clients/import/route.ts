@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getSafeErrorMessage } from "@/lib/error-safe";
 
 interface ContactToImport {
   name: string;
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
     .insert(rows)
     .select("id, name, email, phone");
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: getSafeErrorMessage(error) }, { status: 500 });
 
   return NextResponse.json({ ok: true, imported: created?.length ?? 0, clients: created });
 }
